@@ -429,7 +429,7 @@ body.tediting .tb.ghost{opacity:.3}body.tediting #lobbyBar{display:none!importan
           <div class="mpbig"><h3>➡️ Join a game</h3><p class="opt-desc">Type the 4-letter code from the host's screen.</p><div class="btns"><input type="text" id="mpJoinCode2" class="mpinput code big" maxlength="4" placeholder="CODE" autocomplete="off"><button class="brick" id="mpJoinBtn" type="button">Join</button></div></div>
         </div>
         <p class="opt-desc" id="mpLobMsg"></p>
-        <p class="opt-desc" id="mpHowNote">Everyone plays from this same game page on claude.ai, so it must be shared with each player. To host, a player needs “can edit” access. Games go through the internet, so every device needs to be online.</p>
+        <p class="opt-desc" id="mpHowNote">Friends open this same website (or its app on the home screen) and type the code. Every device needs to be online.</p>
         <div class="btns"><button class="brick small" id="mpBack" type="button">🏠 Back</button></div>
       </div>
       <div id="mpRoomBox" hidden>
@@ -517,7 +517,7 @@ body.tediting .tb.ghost{opacity:.3}body.tediting #lobbyBar{display:none!importan
               <input type="radio" name="gfx" id="gfxAuto" value="auto" checked><label for="gfxAuto">Auto</label>
               <input type="radio" name="gfx" id="gfxLow" value="low"><label for="gfxLow">Fast (low)</label>
               <input type="radio" name="gfx" id="gfxHigh" value="high"><label for="gfxHigh">Pretty (high)</label>
-            </div><p class="opt-desc">Use Fast on phones and tablets if the game feels slow.</p><button class="brick small" id="fsBtn" type="button" hidden>⛶ Full screen</button></div>
+            </div><p class="opt-desc">Use Fast on phones and tablets if the game feels slow. Auto also turns the graphics down by itself if a match keeps running slowly.</p><p class="opt-desc" id="gfxNote" hidden>🐢 Auto has turned the graphics down on this device. Pick a Graphics choice to reset it.</p><button class="brick small" id="fsBtn" type="button" hidden>⛶ Full screen</button></div>
           <div class="opt"><div class="opt-label">Health bars over heads</div>
             <div class="seg">
               <input type="radio" name="hbars" id="hbarsOn" value="on" checked><label for="hbarsOn">❤️ Always show</label>
@@ -569,7 +569,7 @@ body.tediting .tb.ghost{opacity:.3}body.tediting #lobbyBar{display:none!importan
           <div class="opt"><div class="opt-label">Friends can jump into a match that already started</div><div class="seg"><input type="radio" name="mpsLate" id="mpsLateY" value="on"><label for="mpsLateY">Yes (they take over a bot)</label><input type="radio" name="mpsLate" id="mpsLateN" value="off"><label for="mpsLateN">No, wait for the next match</label></div></div>
           <div class="opt"><div class="opt-label">💬 Chat in rooms I host</div><div class="seg"><input type="radio" name="mpsChat" id="mpsChatN" value="off"><label for="mpsChatN">Off</label><input type="radio" name="mpsChat" id="mpsChatY" value="on"><label for="mpsChatY">On</label></div><p class="opt-desc">Off unless you turn it on. Swear words in English, Spanish, French, Portuguese, German and Italian are always hidden, in chat and in player names.</p></div>
           <div class="opt"><div class="opt-label">Ping meter</div><div class="seg"><input type="radio" name="mpsPing" id="mpsPingY" value="on"><label for="mpsPingY">📶 Show</label><input type="radio" name="mpsPing" id="mpsPingN" value="off"><label for="mpsPingN">Hide</label></div><p class="opt-desc">Ping is how long a message takes to go to the host and back. Under 100 ms is green, under 200 ms yellow. The scoreboard (hold Tab, or tap 🏆) shows everyone's ping.</p></div>
-          <div class="opt"><div class="opt-label">🏠 Home server (extra fast on the same Wi-Fi)</div><p class="opt-desc">A grown-up can run the game from a Windows PC at home. Then everyone on your Wi-Fi plays through that PC: faster, and no claude.ai account needed. On the PC, double-click <b>Start Bonk Server</b> in the game's folder, then type the address it shows (like <b>http://192.168.1.20:8080</b>) into Safari or Chrome on each device. See Help → 🏠 Home server.</p></div>
+          <div class="opt"><div class="opt-label">🏠 Home server (extra fast on the same Wi-Fi)</div><p class="opt-desc">A grown-up can run the game from a Windows PC at home. Then everyone on your Wi-Fi plays through that PC: faster, and no account needed. On the PC, double-click <b>Start Bonk Server</b> in the game's folder, then type the address it shows (like <b>http://192.168.1.20:8080</b>) into Safari or Chrome on each device. See Help → 🏠 Home server.</p></div>
           <div class="opt"><div class="opt-label">🛰️ Relay server (for grown-ups, website only)</div><p class="opt-desc">On the Bonk Royale website, devices connect directly. That works at home and on most Wi-Fi. Phones on cellular data, and some school or office networks, block direct links. Then a relay carries the game instead. One is built in, so you don't need to do anything. Only fill this in to use your own relay (TURN) server instead.</p><div class="te-row"><input type="text" id="mpsTurnUrl" class="mpinput" placeholder="turn:relay.example.com:3478" autocomplete="off"></div><div class="te-row"><input type="text" id="mpsTurnUser" class="mpinput" placeholder="Username" autocomplete="off"><input id="mpsTurnPass" class="mpinput" type="password" placeholder="Password" autocomplete="new-password"></div></div>
           <div class="opt"><div class="opt-label">📋 Connection log</div><p class="opt-desc">If a game freezes, says the host paused, or sends you back to the lobby, the reason is written here. Tap <b>Copy log</b> and paste it to Claude or a grown-up.</p><pre id="mpLogOut" class="mplog"></pre><div class="btns"><button class="brick small" id="mpLogCopy" type="button">📋 Copy log</button><button class="brick small" id="mpLogClear" type="button">🧹 Clear</button></div></div>
           <div class="opt"><div class="opt-label">Connection test</div><p class="opt-desc">Checks whether this device can play with friends.</p><div class="btns"><button class="brick small" id="mpRun" type="button">🔌 Run connection test</button></div><ul class="mpout" id="mpTestOut"></ul></div>
@@ -640,7 +640,7 @@ body.tediting .tb.ghost{opacity:.3}body.tediting #lobbyBar{display:none!importan
 // Release track of this copy: "stable" (main), "beta" or "alpha" (newest features). Set when a copy is published.
 const BONK_TRACK="beta";
 // Version: 0.1 is the first numbered release; every push to GitHub after that adds 0.1. "-dev" = not released yet.
-const BONK_VERSION="0.2";
+const BONK_VERSION="0.2.1";
 // Relay (TURN) for the website's direct links, from the owner's Metered.ca account (free plan, no card on file).
 // Only used when two devices cannot link directly (cellular data, strict school/office networks). These details are
 // public inside the website; the worst case of misuse is running out of the free monthly allowance, never a bill.
@@ -669,7 +669,12 @@ const angDiff=(a,b)=>{let d=(b-a)%TAU;if(d>Math.PI)d-=TAU;if(d<-Math.PI)d+=TAU;r
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
 function rr(g,x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();}
 const fmt=s=>{s=Math.max(0,Math.ceil(s));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');};
-const store={get(k){try{return JSON.parse(localStorage.getItem(k));}catch(e){return null;}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}};
+// F14: progress is saved separately for Beta and Alpha (all three websites share one browser storage); settings stay shared.
+// Stable keeps the plain names (0.1 saves keep working). The first time Beta or Alpha reads its own copy, it starts from the shared save.
+const STORE_TRACKED=['bonk-prog','bbr3d-best'];
+const storeKey=k=>STORE_TRACKED.includes(k)&&typeof BONK_TRACK!=='undefined'&&BONK_TRACK!=='stable'?k+'@'+BONK_TRACK:k;
+const store={get(k){try{const tk=storeKey(k);let v=localStorage.getItem(tk);if(v===null&&tk!==k&&(v=localStorage.getItem(k))!==null)localStorage.setItem(tk,v);return JSON.parse(v);}catch(e){return null;}},
+  set(k,v){try{localStorage.setItem(storeKey(k),JSON.stringify(v));}catch(e){}}};
 const shadeHex=(hex,f)=>{const n=parseInt(hex.slice(1),16);let r=(n>>16)&255,g=(n>>8)&255,b=n&255;if(f>1){r+=(255-r)*(f-1);g+=(255-g)*(f-1);b+=(255-b)*(f-1);}else{r*=f;g*=f;b*=f;}
   return '#'+[r,g,b].map(v=>Math.round(clamp(v,0,255)).toString(16).padStart(2,'0')).join('');};
 const esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
@@ -1456,7 +1461,7 @@ function busModel(){const g=new THREE.Group();const env=new THREE.Mesh(GEO.sphC,
   g.add(mesh('boxC','#e2312b',-150,30,0,40,60,6));g.add(mesh('boxC','#e2312b',-150,0,0,40,6,90));
   const prop=new THREE.Group();prop.position.set(-160,-70,0);const pb=mesh('boxC','#2b2f3a',0,0,0,2,50,6);prop.add(pb);g.add(prop);g.userData.prop=prop;scene.add(g);return g;}
 // @module src/js/13-game-state.js: Match options and the match itself: modes, rules, teams, creating characters, and newGame() which builds G.
-// Main: MODES, RULES, opts, G, newGame, makeChar, makeZombie, freeSpot, isEnemy
+// Main: MODES, RULES, opts, G, newGame, makeChar, makeZombie, freeSpot, openFace, isEnemy
 // See also: update, screens, modes-extra
 /* ================= game state ================= */
 const DIFFS={easy:{aimErr:0.12,react:0.75,dmgMul:0.55,speed:148,cdMul:1.7,vision:420,zSpeed:76,zDmg:6},medium:{aimErr:0.06,react:0.42,dmgMul:0.8,speed:166,cdMul:1.25,vision:480,zSpeed:90,zDmg:9},hard:{aimErr:0.025,react:0.22,dmgMul:1,speed:180,cdMul:1.0,vision:540,zSpeed:104,zDmg:12}};
@@ -1496,6 +1501,12 @@ function makeStorm(){const C=[{x:WORLD/2,y:WORLD/2}];
     for(let a=0;a<80;a++){const ang=Math.random()*TAU,d=Math.random()*(SR[i-1]-SR[i])*0.75,tx=p.x+Math.cos(ang)*d,ty=p.y+Math.sin(ang)*d;if(tx>m&&ty>m&&tx<WORLD-m&&ty<WORLD-m&&!isBad(tx,ty)){x=tx;y=ty;break;}}
     C.push({x,y});}
   return{C,x:C[0].x,y:C[0].y,r:SR[0],stage:0,shrinking:false,nextT:0,nextIdx:1,shrinkIdx:-1};}
+// F8: a starting direction with open space in front: the preferred way if it's clear for 220 units, else the clearest of 8 directions
+function openFace(c,pref){let best=pref,bestL=-1;
+  for(let k=0;k<8;k++){const a=pref+(k&1?1:-1)*Math.ceil(k/2)*Math.PI/4,dx=Math.cos(a),dy=Math.sin(a);let L=0;
+    for(let d=25;d<=220;d+=15){const x=c.x+dx*d,y=c.y+dy*d;if(x<20||y<20||x>WORLD-20||y>WORLD-20||blocked3D(x,y,(c.z||groundAt(c.x,c.y,10))+30))break;L=d;}
+    if(L>=220)return a;if(L>bestL){bestL=L;best=a;}}
+  return best;}
 function freeSpot(cx,cy,R,minD,others){
   for(let a=0;a<300;a++){const ang=Math.random()*TAU,r=Math.sqrt(Math.random())*R,x=clamp(cx+Math.cos(ang)*r,60,WORLD-60),y=clamp(cy+Math.sin(ang)*r,60,WORLD-60);
     if(pointBlocked(x,y,22)||isBad(x,y)||inBuilding(x,y,-38)&&false)continue;let ok=true;if(others)for(const o of others)if(Math.hypot(o.x-x,o.y-y)<minD){ok=false;break;}if(ok)return{x,y};}
@@ -1538,6 +1549,7 @@ function newGame(){
   if(mode==='zombie'){for(let k=0;k<4;k++){const a=k*TAU/4;G.items.push(makeItem(['bat','pistol','sword','chicken'][k],p.x+Math.cos(a)*70,p.y+Math.sin(a)*70));}}
   spawnLootSpecials();
   for(const ch of G.chests){const g=new THREE.Group();g.add(mesh('box','#a0632e',0,0,0,30,16,22));const lid=mesh('box','#ffc21a',0,16,0,32,6,24);g.add(lid);g.position.copy(W3(ch.x,ch.y,groundAt(ch.x,ch.y,4)));scene.add(g);ch.mesh=g;ch.lid=lid;}
+  if(!bus)for(const c of G.chars)c.face=openFace(c,c.face||Math.atan2(WORLD/2-c.y,WORLD/2-c.x)); // F8: after the cars, chests and vending machines are placed
   if(bus){const a=Math.random()*TAU,L=WORLD*0.85,cx=WORLD/2+rand(-250,250),cy=WORLD/2+rand(-250,250);
     G.bus={x0:cx-Math.cos(a)*L,y0:cy-Math.sin(a)*L,x1:cx+Math.cos(a)*L,y1:cy+Math.sin(a)*L,t:0,dur:13,z:950,ang:a,x:0,y:0,m:busModel()};
     for(const c of G.chars){c.state='bus';c.jumpAt=c.isPlayer||isMate(c)?99:rand(1.2,11.5);const s=freeSpot(WORLD/2,WORLD/2,WORLD*0.45,0,null);c.landX=s.x;c.landY=s.y;}
@@ -1705,7 +1717,8 @@ function knockOut(o,src,wid){
   if(!o.zombie){if(!src||src===o)feed(nameTag(o)+' '+({storm:'got caught by the storm',lava:'fell in the lava',fire:'got toasted by the fire'}[wid]||'got bonked'));
     else feed((src.zombie?'<b>A zombie</b>':nameTag(src))+' '+VERB[wid]+' '+(o.isPlayer?'<b style="color:#ffcb1f">you</b>':nameTag(o)));}
   for(let i=1;i<5;i++){const s=o.slots[i];if(s&&s.id!=='laser'){const a=Math.random()*TAU;G.items.push(makeItem(s.id,clamp(o.x+Math.cos(a)*30,30,WORLD-30),clamp(o.y+Math.sin(a)*30,30,WORLD-30),s.ammo,1.2,getR(s)));}}
-  o.slots=[{id:'fists'},null,null,null,null];o.cur=0;
+  // F2: the Mythic Laser Blaster comes back at the drop-off anyway, so it stays in its slot while the drone carries you (nobody can fire until landed)
+  {const ls=o.slots.find(s=>s&&s.id==='laser')||null;o.slots=[{id:'fists'},null,ls,null,null];o.cur=ls?2:0;}
   burst(o.x,o.y,o.z+40,16,'star','#ffcb1f',120);burst(o.x,o.y,o.z+20,8,'puff','#ffffff',60);addText(o.x,o.y,o.z+70,o.zombie?'POOF!':'KO!','#ffcb1f',22);sfx('ko',o);
   o.droneAt=G.time+0.45;o.droneSent=false;
   if(XM[G.mode]){if(XM[G.mode].ko)XM[G.mode].ko(o,src);else o.respawnAt=G.time+8;}
@@ -1799,7 +1812,7 @@ function damagePiece(p,amt){if(!p||p.dead||NETC())return;p.hp-=amt;p.mesh.positi
 /* ================= drones ================= */
 function pickupDrone(c){const a=Math.random()*TAU;G.drones.push({mode:'in',x:c.x+Math.cos(a)*650,y:c.y+Math.sin(a)*650,z:c.z+260,c,t:0,ox:Math.cos(a),oy:Math.sin(a),m:droneModel()});sfx('drone',c);}
 function deliverDrone(c,x,y){const a=Math.random()*TAU;c.state='delivering';const gz=groundAt(x,y,400);const d={mode:'deliver',x:x+Math.cos(a)*650,y:y+Math.sin(a)*650,z:gz+300,tx:x,ty:y,gz,c,t:0,ox:Math.cos(a),oy:Math.sin(a),m:droneModel()};
-  c.x=d.x;c.y=d.y;c.z=d.z-60;G.drones.push(d);sfx('drone',{x,y});}
+  c.x=d.x;c.y=d.y;c.z=d.z-60;c.face=Math.atan2(-d.oy,-d.ox);G.drones.push(d);sfx('drone',{x,y});}
 function updateDrones(dt){
   for(let i=G.drones.length-1;i>=0;i--){const d=G.drones[i],c=d.c;
     switch(d.mode){
@@ -1894,7 +1907,7 @@ function asRemote(c,fn){const lp=G.player,sv={mats:G.mats,matSel:G.matSel,buildM
 // a click / tap of the fire button: place a piece in build mode, otherwise start firing
 function clickDown(){if(G&&G.net&&G.player.eliminated){specNext();return;}if(netLocalKey('clk')){G.net.inT=0;if(G.buildMode)buildHeld=true;else mouseDown=true;return;}if(G.buildMode){build(G.buildMode);buildHeld=true;G.bT=0.28;}else mouseDown=true;}
 function netRemoteAction(a){if(typeof a==='string'&&a.startsWith('bm:')){G.buildMode=a.slice(3)||null;return;}if(a==='clk'){if(G.buildMode){build(G.buildMode);buildHeld=true;G.bT=0.28;}else if(NET_CTX)NET_CTX.tapFire=true;return;}
-  if(a==='wd+'||a==='wd-'){G.buildMode=null;cycleWeapon(a==='wd+'?1:-1);return;}keyAction(a);}
+  if(a==='wd+'||a==='wd-'){G.buildMode=null;cycleWeapon(a==='wd+'?1:-1);return;}if(a===' '&&G.player.state==='bus')netLog(G.player.name+' jumped off the bus');keyAction(a);}
 // the client's report of where it moved itself
 function applyKin(c,K){c.x=K.x;c.y=K.y;c.z=K.z;c.vx=K.vx||0;c.vy=K.vy||0;c.vz=K.vz||0;c.face=K.f;c.onGround=!!K.og;c.crouch=!!K.cr;c.slideT=K.sl||0;c.moving=!!K.mv;if(K.w!=null)c.walk=K.w;c.pitch=c.rin.pitch;}
 // one frame of a remote player on the host
@@ -2170,11 +2183,22 @@ function tEditShow(){const L=TL(),tab=TOUCH.tab;
 let GFX=store.get('bonk-gfx')||'auto';
 function applyGfx(){const lvl=GFX==='auto'?(TOUCH.on?'low':'high'):GFX;const pr=lvl==='low'?1:Math.min(window.devicePixelRatio||1,1.5);
   if(renderer.getPixelRatio()!==pr){renderer.setPixelRatio(pr);resize();}const ms=lvl==='low'?1024:2048;
-  if(sun.shadow.mapSize.x!==ms){sun.shadow.mapSize.set(ms,ms);if(sun.shadow.map){sun.shadow.map.dispose();sun.shadow.map=null;}}}
+  if(sun.shadow.mapSize.x!==ms){sun.shadow.mapSize.set(ms,ms);if(sun.shadow.map){sun.shadow.map.dispose();sun.shadow.map=null;}}gfxDropApply();}
 document.querySelectorAll('input[name="touchPref"]').forEach(r=>{r.checked=r.value===TOUCH.pref;r.addEventListener('change',()=>{TOUCH.pref=r.value;store.set('bonk-touch-pref',r.value);setTouch(r.value==='on'||(r.value==='auto'&&isCoarse()));syncTouchDesc();});});
-document.querySelectorAll('input[name="gfx"]').forEach(r=>{r.checked=r.value===GFX;r.addEventListener('change',()=>{GFX=r.value;store.set('bonk-gfx',r.value);applyGfx();});});
+document.querySelectorAll('input[name="gfx"]').forEach(r=>{r.checked=r.value===GFX;r.addEventListener('change',()=>{GFX=r.value;store.set('bonk-gfx',r.value);GFX_DROP=0;store.set('bonk-gfx-drop',0);applyGfx();});});
+// F9: on Auto, a match that keeps running slowly (under 26 frames a second for 6 s) turns the graphics down by itself:
+// first the shadows go, then the picture gets a little softer. Remembered on this device; picking any Graphics choice resets it.
+let GFX_DROP=+store.get('bonk-gfx-drop')||0;const GFXW={t:0,n:0,last:0,slow:0,warm:0};
+function gfxDropApply(){const d=GFX==='auto'?GFX_DROP:0,on=d<1;if(sun.castShadow!==on)sun.castShadow=on;
+  if(d>=2&&renderer.getPixelRatio()>0.75){renderer.setPixelRatio(0.75);resize();}
+  const n=document.getElementById('gfxNote');if(n)n.hidden=!d;}
+function autoGfxTick(){const now=performance.now(),ft=now-GFXW.last;GFXW.last=now;
+  if(GFX!=='auto'||GFX_DROP>=2||!G||G.ended||G.paused||document.hidden||ft>250){GFXW.t=GFXW.n=GFXW.slow=GFXW.warm=0;return;}
+  GFXW.warm+=ft;if(GFXW.warm<4000)return;GFXW.t+=ft;GFXW.n++;if(GFXW.t<2000)return;
+  const fps=GFXW.n*1000/GFXW.t;GFXW.t=GFXW.n=0;GFXW.slow=fps<26?GFXW.slow+1:0;if(GFXW.slow<3)return;
+  GFXW.slow=0;GFXW.warm=0;GFX_DROP++;store.set('bonk-gfx-drop',GFX_DROP);applyGfx();toast('🐢 Graphics turned down to keep the game smooth (Settings → Video)');}
 // @module src/js/24-aiming.js: Camera position, aim point, and turning player input into movement each frame.
-// Main: camPos, aimPoint, playerInput
+// Main: camPos, aimPoint, playerInput, autoAimOnLand
 // See also: input, touch-controls, update
 /* ================= aiming ================= */
 const camPos=new THREE.Vector3();
@@ -2205,6 +2229,17 @@ function playerInput(c,dt){if(G.victory)return[0,0,false];
   else if(!NETC()){c.useT=0;c.fullWarn=0;}
   return[ix,iy,(keys.has('shift')||(tStick&&TOUCH.sprint))&&f>0&&!c.useT];
 }
+// F1/F7: after a drone drop-off, or on leaving the bus, the aim turns to the way the character is facing.
+// It watches your own state each frame (host and joiners alike); the drop-off direction is the way the drone flew you in.
+let aimSt=null,aimPx=0,aimPy=0,aimDx=0,aimDy=0;
+function autoAimOnLand(dt){const p=G.player,s=p.state;
+  if(s==='delivering'){const dx=p.x-aimPx,dy=p.y-aimPy;if(dx*dx+dy*dy>1){aimDx=dx;aimDy=dy;G.yaw+=angDiff(G.yaw,Math.atan2(dy,dx))*Math.min(1,dt*4);}}
+  if(s!==aimSt){
+    if(s==='delivering')aimDx=aimDy=0;
+    if(s==='alive'&&(aimSt==='delivering'||aimSt==='carried'||aimSt==='gone')&&(aimDx||aimDy)){G.yaw=Math.atan2(aimDy,aimDx);G.pitch=-0.05;p.face=G.yaw;}
+    if(s==='sky'&&aimSt==='bus'&&G.bus){G.yaw=G.bus.ang;p.face=G.yaw;}
+    aimSt=s;}
+  aimPx=p.x;aimPy=p.y;}
 // @module src/js/25-bots.js: Bot brains: picking targets and weapons, moving, aiming, getting unstuck; zombie behaviour.
 // Main: decide, steer, botAim, botUpdate, zombieUpdate
 // See also: update, combat
@@ -2443,8 +2478,8 @@ XM.buildbattle={name:'Build Battle',
 XM.training={name:'Training Room',
   init(){const p=G.player;G.len=1e9;G.trDmg=0;G.trLog=[];Object.assign(G.mats,{wood:999,stone:999,metal:999});
     const s=freeSpot(WORLD/2,WORLD/2,500,0,null);p.x=s.x;p.y=s.y;p.z=groundAt(s.x,s.y,10);
-    // pick the direction with the most open space for the target range
-    let bestA=0,bestN=-1;for(let k=0;k<8;k++){const a=k*TAU/8;let n=0;for(let r=120;r<=520;r+=50)if(!pointBlocked(p.x+Math.cos(a)*r,p.y+Math.sin(a)*r,30))n++;if(n>bestN){bestN=n;bestA=a;}}
+    // pick the direction with the most open space for the target range (from right in front of you: F8)
+    let bestA=0,bestN=-1;for(let k=0;k<8;k++){const a=k*TAU/8;let n=0;for(let r=30;r<=520;r+=50)if(!pointBlocked(p.x+Math.cos(a)*r,p.y+Math.sin(a)*r,30))n++;if(n>bestN){bestN=n;bestA=a;}}
     G.trA=bestA;p.face=bestA;G.yaw=bestA;G.pitch=-0.05;
     while(G.chars.length>9){const c=G.chars.pop();removeModel(c);}
     const dum=G.chars.filter(c=>!c.isPlayer),fx=Math.cos(bestA),fy=Math.sin(bestA);
@@ -2756,9 +2791,12 @@ XM.show={name:"Mr. Bonk's Challenge Show",
     setC(c2,S.ph==='play'&&R.id==='light'&&S.lt==='r'?'chip storm':'chip');setH(c2,s);
     const list=ffaPlaces(c=>c.pts);setC(c3,'chip');setH(c3,'You: '+(p.pts||0)+' · Leader: '+esc(list[0].c.isPlayer?'You':list[0].c.name)+' '+list[0].s);},
   // 3D props: the glowing circle, the start and finish lines with a traffic light, the hiding-area ring, the buttons
-  visual(dt,t){const S=G.show;if(!S)return;const R=showRound(),M=S.m;
-    const want=R.id+':'+S.i+':'+(S.buttons.length);if(M.key!==want){this.clearProps();M.key=want;
-      if(R.id==='circle'||R.id==='hide'){M.ring=hillModel();M.ring.position.set(S.cx,groundAt(S.cx,S.cy,10),S.cy);}
+  visual(dt,t){const S=G.show;if(!S)return;const R=showRound();let M=S.m;
+    // F17: clearProps() starts a fresh S.m, so keep using that one (before, a new circle was made and lost every frame)
+    const want=R.id+':'+S.i+':'+(S.buttons.length);if(M.key!==want){this.clearProps();M=S.m;M.key=want;
+      if(R.id==='circle'||R.id==='hide'){M.ring=hillModel();M.ring.position.set(S.cx,groundAt(S.cx,S.cy,10),S.cy);
+        // F17: a bright, solid edge on the ground so the circle is easy to see (it shrinks with the circle)
+        if(R.id==='circle'){const e=new THREE.Mesh(new THREE.RingGeometry(0.455,0.5,128).rotateX(-Math.PI/2),basic('#ff3fa0',{side:THREE.DoubleSide}));e.position.y=4;M.ring.add(e);}}
       if(R.id==='light'){for(const y of[S.sy,S.fy]){const l=new THREE.Mesh(GEO.box,basic(y===S.fy?'#ffffff':'#ffcb1f'));l.scale.set(700,2,14);l.position.set(S.cx,groundAt(S.cx,y,10)+1,y);scene.add(l);(M.lines=M.lines||[]).push(l);}
         const g=new THREE.Group(),pole=new THREE.Mesh(GEO.cyl,mat('#2b2f3a'));pole.scale.set(10,180,10);g.add(pole);const box=new THREE.Mesh(GEO.boxC,mat('#1b2235'));box.scale.set(40,110,30);box.position.y=220;g.add(box);
         M.lamps={};[['r',250],['y',220],['g',190]].forEach(([k,h])=>{const b=new THREE.Mesh(GEO.sphC,new THREE.MeshBasicMaterial({color:'#333'}));b.scale.set(26,26,26);b.position.set(0,h,-16);g.add(b);M.lamps[k]=b;});
@@ -3085,7 +3123,7 @@ function syncVisuals(dt){
   for(let i=G.beams.length-1;i>=0;i--){const b=G.beams[i];b.life-=dt;const k=Math.max(0,b.life/b.max);b.m1.material.opacity=0.5*k;b.m2.material.opacity=k;if(b.life<=0){scene.remove(b.mesh);G.beams.splice(i,1);}}
   for(let i=G.texts.length-1;i>=0;i--){const tx=G.texts[i];tx.life-=dt;tx.mesh.position.y+=36*dt;{const k=1+Math.max(0,(tx.life-tx.max+0.15))*4;tx.mesh.scale.set(tx.s*4*k,tx.s*k,1);}tx.mesh.material.opacity=Math.min(1,tx.life/0.3);if(tx.life<=0){scene.remove(tx.mesh);tx.mesh.material.dispose();G.texts.splice(i,1);}}
   // storm
-  const st=G.storm;stormMesh.visible=!!(st&&st.r<SR[0]-100); // (was a fixed 1650: on the big island the storm wall never showed)nextRing.visible=!!(st&&st.nextIdx!=null);
+  const st=G.storm;stormMesh.visible=!!(st&&st.r<SR[0]-100);nextRing.visible=!!(st&&st.nextIdx!=null); // (the wall was a fixed 1650: on the big island it never showed) F18: the next-circle line had ended up inside this comment
   if(st){stormMesh.position.set(st.x,-50,st.y);stormMesh.scale.set(st.r*2,1500,st.r*2);if(st.nextIdx!=null){const n=st.C[st.nextIdx],r=SR[st.nextIdx];nextRing.position.set(n.x,3,n.y);nextRing.scale.set(r*2,1,r*2);}}
   updateCamera(dt);updateGhost();animateLoot(dt,t);if(XM[G.mode]&&XM[G.mode].visual)XM[G.mode].visual(dt,t);
   {let inB=null;for(const b of BUILDINGS){const inside=p.x>b.x&&p.x<b.x+b.w&&p.y>b.y&&p.y<b.y+b.h;
@@ -3113,6 +3151,7 @@ function animateWorld(dt,t,focus){
   pGeo.setDrawRange(0,n);pGeo.attributes.position.needsUpdate=true;pGeo.attributes.color.needsUpdate=true;puGeo.setDrawRange(0,m);puGeo.attributes.position.needsUpdate=true;
 }
 function updateCamera(dt){
+  autoAimOnLand(dt);
   if(G.victory&&G.player.state==='alive'){const p=G.player,a=G.time*0.5;if(camera.fov!==70){camera.fov=70;camera.updateProjectionMatrix();}$('scope').hidden=true;
     camera.position.set(p.x+Math.cos(a)*105,p.z+50,p.y+Math.sin(a)*105);camPos.copy(camera.position);camera.lookAt(p.x,p.z+30,p.y);return;}
   const p=specFollow()||G.player;let fx=p.x,fy=p.y,fz=p.z+42,dist0=125,sh=26;if(p.vehicle){dist0=215;sh=0;fz=p.z+64;}
@@ -3268,7 +3307,7 @@ function renderShop(){$('shopTk').textContent=PROG.tickets;const d=dealItem();$(
 function openShop(){prevScreen=curScreen==='shop'?prevScreen:curScreen;showScreen('shop');shopSel=null;shopSure=null;$('shopMsg').textContent='';renderShop();}
 function closeShop(){if(shopPreview){shopPreview=null;rebuildLobby();}showScreen(prevScreen&&prevScreen!=='shop'?prevScreen:'welcome');}
 $('shop').addEventListener('click',ev=>{const b=ev.target.closest('[data-buy]');const card=ev.target.closest('.sitem');if(!card)return;const key=card.dataset.key,[t,id]=key.split(':'),e=SHOP.find(x=>x.t===t&&x.it.id===id);
-  if(b){if(shopSure!==key||performance.now()-shopSureT>4000){shopSure=key;shopSureT=performance.now();sfx('pickup');renderShop();return;}
+  if(b){if(shopSure!==key||performance.now()-shopSureT>8000){shopSure=key;shopSureT=performance.now();sfx('pickup');renderShop();return;}
     const price=shopPrice(e);if(PROG.tickets<price)return;PROG.tickets-=price;PROG.owned.push(key);PROG.locker[t]=id;if(t==='outfit')PROG.locker.back='outfit';saveProg();shopSure=null;shopPreview=null;rebuildLobby();
     audioInit();sfx('victory');renderShop();$('shopMsg').textContent='🎉 You got '+e.it.name+'! You are wearing it now, and it is in your Locker.';return;}
   shopSure=null;shopSel=key;if(owns(t,id)){PROG.locker[t]=id;if(t==='outfit')PROG.locker.back='outfit';saveProg();shopPreview=null;}else shopPreview={t,id};rebuildLobby();sfx('pickup');renderShop();});
@@ -3386,10 +3425,10 @@ const HELP_PAGES=[
   {t:'🚁 Getting bonked',shots:['drone'],body:()=>`<ul><li>When you run out of health you get knocked out, but a <b>rescue drone</b> flies you back in after a few seconds.</li><li>In Battle Royale, drones stop at the <b>final circle</b>. Then it's last one standing!</li><li>In <b>Squads</b> you get knocked down first. A teammate can revive you by holding ${TOUCH.on?'the green REVIVE button':'E'} next to you.</li><li>Heal up with bandages, med kits and shield potions.</li></ul>`},
   {t:'🏆 How to win',shots:[],body:()=>`<p>Every game mode has its own way to win:</p><div class="hwin">${[['🪂 Battle Royale','Be the last one (or last squad) standing when the storm closes.'],['⚔️ Team Battle','Red team needs 20 knockouts before blue does.'],['🧟 Zombie Survival','Survive as many zombie waves as you can. Build walls!'],['🏎️ Car Race','Drive through the glowing gates in order. Finish 3 laps first.'],['🌋 Floor is Lava','Build up and stay above the rising lava the longest.'],['👑 Capture the Crown','Grab the crown and hold it to score points.'],['🚩 Capture the Flag','Steal the blue flag and bring it back to your base.'],['⛰️ King of the Hill','Stand in the golden circle to score. It moves around!'],['🏗️ Build Battle','Build the tallest tower before time runs out.'],['🎯 Training Room','No winning here: practice your aim, building and every weapon.']].map(([a,b])=>`<div><b>${a}</b>${b}</div>`).join('')}</div>`},
   {t:'🌐 Play with friends',shots:[],body:()=>`<ul><li>Tap <b>🌐 Multiplayer</b> on the welcome screen and type your <b>name</b>.</li><li><b>One player hosts:</b> tap <b>Host a game</b> and read out the 4-letter <b>room code</b>.</li><li><b>Everyone else joins:</b> tap <b>Join</b> and type the code. The host sees <b>🙋 wants to join</b> and taps <b>✅ Allow</b> (or <b>❌ Kick</b>).</li><li>The host picks the <b>game</b>, the <b>map</b> and the <b>teams</b>: <i>Host picks</i> (tap a player to move them), <i>🎲 Random</i>, <i>Pick your own</i> (tap Join Red/Blue…), or <i>Everyone vs everyone</i>.</li><li>Bots fill the empty spots. The host presses <b>START</b> and everyone drops into the same match!</li><li>Up to 8 real players, in every game mode: Battle Royale, Team Battle, Zombie Survival (team up against the waves), Car Race, Floor is Lava, Capture the Crown, Capture the Flag, King of the Hill, Build Battle and the Training Room.</li><li>Hold <b>Tab</b> (or tap <b>🏆</b>) for the <b>scoreboard</b>: everyone's knockouts and ping.</li><li>Out of the match? You <b>watch a teammate</b>. Press Space, click or tap JUMP to switch who you watch.</li><li>Friends who arrive late can <b>jump into a match that already started</b> by taking over a bot (the host can turn this off in Settings → 🌐 Multiplayer).</li><li>After the match, <b>Play again</b> takes everyone back to the room.</li></ul>`},
-  {t:'🔧 Connection trouble',shots:[],body:()=>`<ul><li>Everyone plays from <b>the same game page on claude.ai</b>, so it has to be <b>shared</b> with each player (the Share button at the top of the page). To <b>host</b>, a player needs <b>“can edit”</b> access.</li><li>On the <b>Bonk Royale website</b>, friends just open the same website address. No account needed.</li><li>Every device needs to be <b>online</b> during the match.</li><li>Run <b>Settings → 🌐 Multiplayer → Connection test</b>. Green checks mean you're ready.</li><li>Use <b>Test with a friend</b> to see how fast two devices talk. Under 150 ms feels smooth.</li><li>“No game found”: check the 4 letters, and make sure the host is still on the room screen.</li><li>If the host leaves, the match ends for everyone. If a player leaves, a bot takes over their character.</li></ul>`},
+  {t:'🔧 Connection trouble',shots:[],body:()=>`<ul><li>Everyone opens <b>the same Bonk Royale website</b> (or its app on the home screen). No account needed.</li><li>Everyone needs the <b>same version</b>: Stable, Beta and Alpha are separate websites, and players on different ones can't join each other.</li><li>At home, a <b>home server</b> is even faster (see 🏠 Home server).</li><li>Every device needs to be <b>online</b> during the match.</li><li>Run <b>Settings → 🌐 Multiplayer → Connection test</b>. Green checks mean you're ready.</li><li>Use <b>Test with a friend</b> to see how fast two devices talk. Under 150 ms feels smooth.</li><li>“No game found”: check the 4 letters, and make sure the host is still on the room screen.</li><li>If the host leaves, the match ends for everyone. If a player leaves, a bot takes over their character.</li></ul>`},
   {t:"🎤 Mr. Bonk's Show",shots:[],body:()=>`<p>A game show in four rounds. Win rounds to get points. The most points after round 4 wins <b>${SHOW_PRIZE} tickets</b>!</p><ol><li><b>Last to Leave the Circle:</b> stay inside the glowing circle while it shrinks. Step out and you are out.</li><li><b>Red Light, Green Light:</b> run to the finish on <b>🟢 GREEN</b>. On <b>🔴 RED</b>, freeze! Move and you go back to the start.</li><li><b>Hide and Seek:</b> hide inside the big ring. Seekers count to 15, then hunt. If a seeker touches you, you are out. Stay hidden until time runs out to win!</li><li><b>The Button Challenge:</b> one button wins the round. The others are traps (BOING!). Find the winner first!</li></ol><p>No fighting in this mode, and it works in multiplayer too.</p>`},
   {t:'🛡️ Safety & chat',shots:[],body:()=>`<ul><li><b>Nobody gets in without the host's OK.</b> Anyone with the code can <i>ask</i> to join. The host sees their name and taps <b>✅ Allow</b> or <b>❌ Kick</b>. During a match, the request pops up at the top of the screen.</li><li>In the room, the host can tap <b>✖</b> next to a player to remove them.</li><li><b>Chat is off</b> unless the host turns it on (in the room, or in Settings → 🌐 Multiplayer).</li><li>When chat is on, press <b>Enter</b> or tap <b>💬</b> to type, or tap a quick message like <b>GG!</b>.</li><li><b>Swear words are hidden</b> in English, Spanish, French, Portuguese, German and Italian. They turn into ★★★. A player name with a swear word in it just shows as <b>Player</b>.</li><li>Only play with people you know, and never share your address, school or passwords in chat.</li></ul>`},
-  {t:'🏠 Home server',shots:[],body:()=>`<p>Playing at home with family? A Windows PC can run the game for everyone on the same Wi-Fi. It's faster than claude.ai, and nobody needs an account.</p><ol><li>Put the whole <b>Bonk Royale</b> game folder on the PC (it has <b>Start Bonk Server.bat</b> in it).</li><li>Double-click <b>Start Bonk Server</b>. A window opens with an address like <b>http://192.168.1.20:8080</b>.</li><li>The first time, Windows may ask about the firewall: tick <b>Private networks</b> and click <b>Allow</b>.</li><li>On each iPad, phone or laptop on the same Wi-Fi, type that address into Safari or Chrome. Then use <b>🌐 Multiplayer</b> as usual: one player hosts and the others type the code.</li><li>Keep the server window open while you play. Close it when you're done.</li></ol><ul><li>The lobby says <b>🏠 Home server</b> when it's working.</li><li>Your locker, tickets and settings are saved separately for each address, so the home-server game starts fresh.</li><li>Only devices on your own Wi-Fi can reach the server, not the whole internet.</li></ul>`},
+  {t:'🏠 Home server',shots:[],body:()=>`<p>Playing at home with family? A Windows PC can run the game for everyone on the same Wi-Fi. It's faster than going over the internet, and nobody needs an account.</p><ol><li>Put the whole <b>Bonk Royale</b> game folder on the PC (it has <b>Start Bonk Server.bat</b> in it).</li><li>Double-click <b>Start Bonk Server</b>. A window opens with an address like <b>http://192.168.1.20:8080</b>.</li><li>The first time, Windows may ask about the firewall: tick <b>Private networks</b> and click <b>Allow</b>.</li><li>On each iPad, phone or laptop on the same Wi-Fi, type that address into Safari or Chrome. Then use <b>🌐 Multiplayer</b> as usual: one player hosts and the others type the code.</li><li>Keep the server window open while you play. Close it when you're done.</li></ol><ul><li>The lobby says <b>🏠 Home server</b> when it's working.</li><li>Your locker, tickets and settings are saved separately for each address, so the home-server game starts fresh.</li><li>Only devices on your own Wi-Fi can reach the server, not the whole internet.</li></ul>`},
   {t:'👕 Level up & style',shots:[],body:()=>`<ul><li>Every match gives you <b>XP</b>. Level up to unlock outfits, gliders, pickaxes, back bling and gun wraps in the <b>Locker</b>.</li><li>Finish <b>challenges</b> (shown in the lobby) for bonus XP and tickets.</li><li>Earn <b>🎟️ tickets</b> by playing, then spend them in the <b>Ticket Shop</b>. Tap an item to try it on first!</li><li><b>Gun wraps</b> change the colour of every gun you hold, and even your laser beams.</li><li>${TOUCH.on?'Want your buttons somewhere else? Settings → Controls → <b>Customize touch controls</b>.':'Playing on a tablet? Touch controls turn on by themselves.'}</li></ul>`}];
 function renderHelp(){const P=HELP_PAGES[helpIdx];htmlSink($('helpTabs')).html=HELP_PAGES.map((p,i)=>`<button type="button" class="ltab${i===helpIdx?' on':''}" data-i="${i}">${p.t}</button>`).join('');
   const shots=P.shots.map(k=>`<div class="hshot">${helpShots&&helpShots[k]?`<img src="${helpShots[k]}" alt="${esc(P.t)} picture">`:helpBusy?'📸 Taking pictures…':'Picture not available'}</div>`).join('');
@@ -3411,7 +3450,8 @@ $('helpDone').addEventListener('click',()=>showScreen('welcome'));
    set up through the room so game traffic goes device-to-device over the local Wi-Fi. */
 const MP={room:null,avail:null,conn:false,err:null,name:(store.get('bonk-name')||'').slice(0,16),test:null,friend:null};
 const mpCode=()=>{const A='BCDFGHJKLMNPQRSTVWXZ';let s='';for(let i=0;i<4;i++)s+=A[Math.floor(Math.random()*A.length)];return s;};
-const mpRoomName=code=>'bonk-'+code.toLowerCase();
+// F15: Beta and Alpha have their own rooms, so players on different sites never land in the same game (Stable keeps the 0.1 names)
+const mpRoomName=code=>'bonk-'+(typeof BONK_TRACK!=='undefined'&&BONK_TRACK!=='stable'?BONK_TRACK+'-':'')+code.toLowerCase();
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 // show which release track this is (Beta and Alpha get a badge on the welcome screen)
 (()=>{const names={stable:'Stable',beta:'Beta',alpha:'Alpha'},desc={stable:'the main version',beta:'next features, almost ready',alpha:'the newest features, still being tested'};const t=names[BONK_TRACK]?BONK_TRACK:'stable';
@@ -3419,13 +3459,13 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
   $('trackInfo').textContent='Version track: '+names[t]+' ('+desc[t]+'). Each track keeps its own saves.';})();
 // which way this copy of the game links players: claude.ai rooms, test tabs, a home server, or direct links on the public website
 const mpVia=()=>!MP.room?null:MP.room.local?'local':MP.room.home?'home':MP.room.p2p?'p2p':'claude';
-const MP_HOW={claude:'Everyone plays from this same game page on claude.ai, so it must be shared with each player. To host, a player needs “can edit” access. Games go through the internet, so every device needs to be online.',
+const MP_HOW={claude:'Everyone plays from this same shared game page. Every device needs to be online.',
   local:'Test mode: this links browser tabs on one computer.',
   home:'You are playing through a home server. Everyone must be on the same Wi-Fi and open the address shown in the server window.',
   p2p:'Friends open this same website and type the code. Devices connect straight to the host (a free matchmaking service introduces them), so every device needs internet.'};
 function mpStatusText(lobby){if(MP.avail===null)return'⏳ Checking…';const v=mpVia();
   if(!MP.avail&&MP.err==='nortc')return'⚪ This browser cannot do online play. Try Safari, Chrome or Edge.';
-  if(!MP.avail)return v==='p2p'||MP.err==='peerjs'?'⚪ Online play could not load. Check the internet connection and reload.':lobby?'⚪ Online play needs the game opened from its claude.ai link (signed in), a home server, or the Bonk Royale website.':'⚪ Online play is not available here';
+  if(!MP.avail)return v==='p2p'||MP.err==='peerjs'?'⚪ Online play could not load. Check the internet connection and reload.':lobby?'⚪ Online play needs the Bonk Royale website or a home server.':'⚪ Online play is not available here';
   if(v==='local')return'🧪 Test mode: linking browser tabs on this computer';
   if(!MP.conn)return v==='home'?'🟡 Connecting to the home server…':'🟡 Connecting…';
   return v==='home'?'🏠 Home server: fast play on this Wi-Fi':v==='p2p'?'🌍 Online: devices connect directly':'🟢 Online play is available';}
@@ -3474,7 +3514,7 @@ async function rtcLoopback(ice){const a=new RTCPeerConnection({iceServers:ice}),
   catch(e){return{ok:false,err:String(e&&e.message||e)};}finally{a.close();b.close();}}
 // ---- self test: what this device can do ----
 async function mpSelfTest(){const T=MP.test={running:true,rows:[]};const row=(k,ok,txt)=>{T.rows.push({k,ok,txt});mpRender();};mpRender();
-  if(!MP.room){row('room',false,MP.avail===false?'Online play only works when the game is opened from its claude.ai link (signed in).':'Still connecting… try again in a few seconds.');T.running=false;mpRender();return;}
+  if(!MP.room){row('room',false,MP.avail===false?'Online play works on the Bonk Royale website or a home server.':'Still connecting… try again in a few seconds.');T.running=false;mpRender();return;}
   const c=await mpWaitConn(6000);row('room',c,c?'Connected to the game room service.':'Could not reach the room service. Check the internet connection.');
   if(c){try{const R=await MP.room.join('bonk-selftest-'+Math.random().toString(36).slice(2,8));const t0=performance.now();let rtt=null;const off=R.on('ping',m=>{if(m.sameTab&&rtt==null)rtt=performance.now()-t0;});
       await R.emit('ping',{t:Date.now()});const t1=performance.now();while(rtt==null&&performance.now()-t1<4000)await sleep(30);off();await R.leave();
@@ -3513,7 +3553,7 @@ function mpStopFriend(){const F=MP.friend;if(!F)return;clearInterval(F.timer);if
 // ---- settings page ----
 function mpRender(){const box=$("mpBox");if(!box)return;netLogRender();const T=MP.test,F=MP.friend;
   const status=mpStatusText(false);
-  $('mpStatus').textContent=status+(MP.avail===false?' (open the game from its claude.ai link while signed in, or from a home server).':'');
+  $('mpStatus').textContent=status+(MP.avail===false?' (open the Bonk Royale website, or use a home server).':'');
   $('mpTestOut').innerHTML=T?T.rows.map(r=>`<li>${r.ok?'✅':'⚠️'} ${esc(r.txt)}</li>`).join('')+(T.running?'<li>⏳ Testing…</li>':''):'';
   const fo=$('mpFriendOut');if(!F)fo.innerHTML='';else{
     fo.innerHTML=`<p><b>Code: <span class="mpcode">${esc(F.code)}</span></b> · ${esc(F.status)}</p>`+(F.peer?`<ul><li>${F.rtt!=null?'✅ Through the internet relay: '+F.rtt+' ms':'⏳ Measuring the relay…'}</li><li>${F.direct?'✅ Direct Wi-Fi connection: '+(F.drtt!=null?F.drtt+' ms':'open'):F.direct===false?'⚠️ No direct connection ('+esc(F.why||'')+'). Games would use the relay.':'⏳ Trying a direct Wi-Fi connection…'}</li></ul>`:'');}
@@ -3612,7 +3652,7 @@ function peerRoomApi(){let up=false;const rooms={},conn=new Set();const tell=v=>
     // ---- hub side ----
     const others=(skip,ch,s)=>{for(const[id,l]of links)if(id!==skip)tx(l[ch]&&l[ch].open?l[ch]:l.r,s);};
     function hubLink(c){const id=c.peer,l=links.get(id)||{r:null,u:null,seen:Date.now()};links.set(id,l);l[c.label==='u'?'u':'r']=c;
-      c.on('data',d=>hubRecv(id,String(d),c.label==='u'));c.on('close',()=>{if(links.get(id)===l&&c.label!=='u')hubDrop(id,'the player closed it');});c.on('error',()=>{});
+      c.on('data',d=>hubRecv(id,String(d),c.label==='u'));c.on('close',()=>{if(links.get(id)===l&&c.label!=='u'&&l.r===c)hubDrop(id,'the player closed it');});c.on('error',()=>{});
       if(c.label!=='u')c.on('open',()=>{tx(c,'P|'+me+'|'+mySeq+'|'+JSON.stringify(mine));for(const p of peers.values())if(p.peer!==id)tx(c,'P|'+p.peer+'|'+p.seq+'|'+JSON.stringify(p.presence));});}
     function hubRecv(id,s,unrel){const l=links.get(id);if(l)l.seen=Date.now();const k=s[0];
       if(k==='P'){const m=cut(s,1);if(!m)return;const seq=+m[0];const old=peers.get(id);if(old&&old.seq>=seq)return;setP(id,seq,m[1]);others(id,unrel?'u':'r','P|'+id+'|'+seq+'|'+m[1]);}
@@ -3624,10 +3664,27 @@ function peerRoomApi(){let up=false;const rooms={},conn=new Set();const tell=v=>
       else if(k==='B'){const id=s.slice(2);if(peers.delete(id))notify();}
       else if(k==='E'){m=cut(s,2);if(m)try{hear(m[1],JSON.parse(m[2]),who(m[0],false));}catch(e){}}}
     function asClient(){peer=new Peer(p2pOptions());peer.on('error',e=>{const t=e&&e.type;if(t==='peer-unavailable'){netLog('no room with that code on the matchmaking server');if(done)done();}else netLog('connection error: '+t);});
-      peer.on('open',id=>{me=id;const r=peer.connect(hubId,{label:'r',reliable:true,serialization:'raw'}),u=peer.connect(hubId,{label:'u',reliable:false,serialization:'raw'});toHub={r,u};
-        r.on('open',()=>{hubSeen=Date.now();tx(r,'P|'+mySeq+'|'+JSON.stringify(mine));if(done)done();});
-        for(const c of[r,u]){c.on('data',d=>clientRecv(String(d)));c.on('error',e=>netLog('link to the host failed: '+(e&&(e.type||e.message)||e)));}
-        setTimeout(()=>{if(!dead&&!r.open)netLog('could not reach the host directly after 8 s (a firewall or network may be blocking it)');},8000);r.on('close',()=>{if(!dead){netLog('link to the host closed');if(peers.size){peers.clear();notify();}}});});}
+      peer.on('open',id=>{const first=!me;me=id;if(first)linkToHub();});}
+    function linkToHub(){const r=peer.connect(hubId,{label:'r',reliable:true,serialization:'raw'}),u=peer.connect(hubId,{label:'u',reliable:false,serialization:'raw'});toHub={r,u};
+      const cur=()=>toHub&&toHub.r===r;
+      r.on('open',()=>{hubSeen=Date.now();tx(r,'P|'+mySeq+'|'+JSON.stringify(mine));if(relinkSince)netLog('reconnected to the host'+(viaRelay?' through the relay':''));relinkSince=relinkAt=tries=0;watchIce(r);if(done)done();});
+      for(const c of[r,u]){c.on('data',d=>{if(cur())clientRecv(String(d));});c.on('error',e=>netLog('link to the host failed: '+(e&&(e.type||e.message)||e)));}
+      setTimeout(()=>{if(!dead&&!r.open&&cur()&&!relinkSince)netLog('could not reach the host directly after 8 s (a firewall or network may be blocking it)');},8000);
+      r.on('close',()=>{if(!dead&&cur())relink('the link closed');});}
+    // F4: a phone moving from Wi-Fi to cellular (or any broken path) links to the host again by itself. A fresh link gathers new
+    // network paths, the relay among them; if that does not work, the next try uses the relay only. The match stays on screen meanwhile.
+    let relinkSince=0,relinkAt=0,tries=0,viaRelay=false;
+    function relink(why,relayNow){if(dead||!peer)return;const now=Date.now();if(relinkAt&&now-relinkAt<9000)return;
+      if(!relinkSince){relinkSince=now;netLog('link to the host lost ('+why+'), reconnecting');}else netLog('still reconnecting ('+why+')');
+      tries++;relinkAt=now;if((tries>=2||relayNow)&&!viaRelay){viaRelay=true;peer.options.config=Object.assign({},peer.options.config,{iceTransportPolicy:'relay'});netLog('trying through the relay only');}
+      const old=toHub;toHub=null;try{old&&old.r.close();old&&old.u.close();}catch(e){}
+      if(peer.destroyed){me=null;asClient();return;}if(peer.disconnected)try{peer.reconnect();}catch(e){}
+      linkToHub();}
+    function watchIce(c){const pc=c.peerConnection;if(!pc||!pc.addEventListener)return;
+      pc.addEventListener('iceconnectionstatechange',()=>{const st=pc.iceConnectionState;if(st!=='failed'&&st!=='disconnected')return;
+        setTimeout(()=>{const now=pc.iceConnectionState;if(toHub&&toHub.r===c&&now!=='connected'&&now!=='completed')relink('the network path broke');},st==='failed'?0:2500);});}
+    const onNet=()=>{if(!hub&&toHub&&Date.now()-hubSeen>2000)relink('the network changed');};
+    addEventListener('online',onNet);if(navigator.connection&&navigator.connection.addEventListener)navigator.connection.addEventListener('change',onNet);
     // the host keeps its link to the matchmaking server alive; without it new players cannot find the room (a "stale" room code)
     function start(){peer=new Peer(hubId,p2pOptions());let wired=false;
       peer.on('open',id=>{me=id;hub=true;R.hubbed=true;if(!wired){wired=true;peer.on('connection',hubLink);}else netLog('room can be found again');if(done)done();});
@@ -3640,14 +3697,19 @@ function peerRoomApi(){let up=false;const rooms={},conn=new Set();const tell=v=>
     // every 0.4 s: re-send the latest presence on the reliable link (fast updates go on the quick link, which may drop some), check who is still there
     timer=setInterval(()=>{if(dead)return;if(relSeq!==mySeq){relSeq=mySeq;pushP('r');}const now=Date.now();
       if(hub){keepFindable(now);for(const[id,l]of links){if(now-l.seen>2500)tx(l.r,'H');if(now-l.seen>30000)hubDrop(id,'silent for 30 s');}}
-      else if(toHub){tx(toHub.r,'H');if(hubSeen&&now-hubSeen>30000&&peers.size){netLog('host silent for 30 s');peers.clear();notify();}}},400);
+      else if(relinkSince){if(now-relinkAt>9000)relink('not back yet');if(now-relinkSince>25000&&peers.size){netLog('could not reconnect to the host');peers.clear();notify();}}
+      else if(toHub){tx(toHub.r,'H');if(typeof G!=='undefined'&&G&&G.net&&!G.ended&&hubSeen&&now-hubSeen>6000)relink('no updates for 6 s');
+        else if(hubSeen&&now-hubSeen>30000&&peers.size){netLog('host silent for 30 s');peers.clear();notify();}}},400);
     const R={name,hubbed:null,
       presence(patch){for(const k in patch){if(patch[k]===null)delete mine[k];else mine[k]=patch[k];}mine=Object.assign({},mine);mySeq++;pushP('u');notify();return Promise.resolve();},
       peers:snap,onPeers(f){subs.add(f);setTimeout(()=>f({peers:snap(),joined:snap(),left:[],updated:[]}),0);return()=>subs.delete(f);},
       emit(topic,data){const s=JSON.stringify(data);if(hub)others(null,'r','E|'+me+'|'+topic+'|'+s);else if(toHub)tx(toHub.r,'E|'+topic+'|'+s);hear(topic,data,who(me,true));return Promise.resolve();},
       on(topic,f){(tops[topic]=tops[topic]||[]).push(f);return()=>{tops[topic]=tops[topic].filter(x=>x!==f);};},
       connected:()=>up,onConnection(f){conn.add(f);setTimeout(()=>f(up),0);return()=>conn.delete(f);},
-      leave(){dead=true;clearInterval(timer);try{peer&&peer.destroy();}catch(e){}delete rooms[name];return Promise.resolve();}};
+      leave(){dead=true;clearInterval(timer);removeEventListener('online',onNet);if(navigator.connection&&navigator.connection.removeEventListener)navigator.connection.removeEventListener('change',onNet);
+        try{peer&&peer.destroy();}catch(e){}delete rooms[name];return Promise.resolve();},
+      // for the tests: break the link the way a network change does, and see which path it uses
+      _relink:(why,relayNow)=>relink(why,relayNow),_link:()=>toHub};
     rooms[name]=R;
     return loadPeerJS().then(()=>new Promise(res=>{done=()=>{done=null;res(R);};setTimeout(()=>{if(done)done();},9000);start();}));}
   return{join,connected:()=>up,onConnection(f){conn.add(f);setTimeout(()=>f(up),0);return()=>conn.delete(f);},emit:()=>Promise.resolve(),on:()=>()=>{},p2p:true};}
@@ -3696,7 +3758,7 @@ function netKick(peer){const L=NET.lob;if(!L)return;netLog('kicked '+netPeerName
 const NET_ASKSEEN=new Set();const netSay=t=>G&&!G.ended?toast(t):mpLobMsg(t);
 function netAskRender(){const box=$('mpAsk'),pop=$('askPop');const pend=netPending().slice(0,5);
   for(const p of pend)if(!NET_ASKSEEN.has(p.peer)){NET_ASKSEEN.add(p.peer);sfx('alert');}
-  const rows=pend.map(p=>`<div class="askrow"><span>🙋 <b>${esc(cleanName(p.presence.bonk.name)||'Player')}</b> wants to join</span><button type="button" class="brick small" data-allow="${esc(p.peer)}">✅ Allow</button><button type="button" class="brick small" data-kick="${esc(p.peer)}">❌ Kick</button></div>`).join('');
+  const rows=pend.map(p=>`<div class="askrow"><span>🙋 <b>${esc(cleanName(p.presence.bonk.name)||'Player')}</b> wants to join${(p.presence.bonk.ver||'0.1')!==BONK_VERSION?` <i>(⚠️ version ${esc(String(p.presence.bonk.ver||'0.1'))}: they should reload)</i>`:''}</span><button type="button" class="brick small" data-allow="${esc(p.peer)}">✅ Allow</button><button type="button" class="brick small" data-kick="${esc(p.peer)}">❌ Kick</button></div>`).join('');
   const inMatch=!!(G&&G.net&&!G.ended);
   if(box){if(NET.role==='host'){box.hidden=!rows;setHtmlIfChanged(box,rows);}
     else if(NET.R&&NET.lob){const me=netMe(),ok=me&&NET.lob.ok&&NET.lob.ok[me.peer];box.hidden=!!ok;setHtmlIfChanged(box,ok?'':'<p class="askwait">⏳ Waiting for the host to let you in…</p>');}else box.hidden=true;}
@@ -3738,13 +3800,16 @@ let chatFeedT=0;function netSafeHUD(){const on=!!(G&&G.net&&!G.ended&&chatOn());
 /* ================= multiplayer: lobby (host / join with a room code, teams) ================= */
 function netDefaultLob(){return{mode:NET_MODES.includes(opts.mode)?opts.mode:'royale',map:opts.map,tm:MPSET.tm,max:MPSET.max,late:MPSET.late,nteams:2,teams:{},ok:{},kick:{},chat:!!MPSET.chat,bots:opts.bots,diff:opts.diff,len:opts.len,storm:opts.storm,start:null};}
 async function netHost(){if(!MP.room)return;mpLobMsg('Opening a room…');try{await mpWaitConn(6000);let code,R;for(let t=0;t<4;t++){code=mpCode();R=await MP.room.join(mpRoomName(code));if(R.hubbed!==false)break;await R.leave();}
-    Object.assign(NET,{R,code,role:'host',lob:netDefaultLob()});netLog('hosting room '+code+' via '+mpVia());await R.presence({bonk:{name:cleanName(MP.name)||'Host',look:myLook(),role:'host',v:1},lob:NET.lob});netWatch();renderMpLobby();}
+    Object.assign(NET,{R,code,role:'host',lob:netDefaultLob()});netLog('hosting room '+code+' via '+mpVia());await R.presence({bonk:{name:cleanName(MP.name)||'Host',look:myLook(),role:'host',v:1,ver:BONK_VERSION},lob:NET.lob});netWatch();renderMpLobby();}
   catch(e){netLog('could not open a room: '+(e&&(e.code||e.message)||e));mpLobMsg('Could not open a room ('+(e&&e.code||e)+'). Try the connection test in Settings → Multiplayer.');}}
 async function netJoin(code){if(!MP.room)return;code=(code||'').toUpperCase().replace(/[^A-Z]/g,'');if(code.length!==4){mpLobMsg('Room codes have 4 letters.');return;}
   mpLobMsg('Looking for room '+code+'…');netLog('joining room '+code+' via '+mpVia());try{await mpWaitConn(6000);const R=await MP.room.join(mpRoomName(code));Object.assign(NET,{R,code,role:'player',lob:null,hostPeer:null});
-    await R.presence({bonk:{name:cleanName(MP.name)||'Player',look:myLook(),role:'player',wish:null,v:1}});netWatch();
+    await R.presence({bonk:{name:cleanName(MP.name)||'Player',look:myLook(),role:'player',wish:null,v:1,ver:BONK_VERSION}});netWatch();
     const t0=performance.now();while(!netHostPeer()&&performance.now()-t0<8000)await sleep(150);
-    if(!netHostPeer()){netLog('no host found in room '+code);await netLeave(true);mpLobMsg('No game found with code '+code+'. Check the letters, and make sure the host is still in the room.');return;}renderMpLobby();}
+    if(!netHostPeer()){netLog('no host found in room '+code);await netLeave(true);mpLobMsg('No game found with code '+code+'. Check the letters, and make sure the host is still in the room.');return;}
+    // F15: both players need the same version (an old copy of the page stays open until it is reloaded)
+    const hv=netHostPeer().presence.bonk.ver||'0.1';if(hv!==BONK_VERSION){netLog('host has version '+hv+', this device has '+BONK_VERSION+': not joining');await netLeave(true);
+      mpLobMsg('That game is on a different version of Bonk Royale (the host has '+hv+', you have '+BONK_VERSION+'). Both players: reload the page (or close and reopen the app), then try again.');return;}renderMpLobby();}
   catch(e){netLog('could not join: '+(e&&(e.code||e.message)||e));mpLobMsg('Could not join ('+(e&&e.code||e)+').');}}
 async function netLeave(quiet){if(NET.R)netLog('left room '+NET.code);NET.hostMissT=0;if(NET.offPeers)NET.offPeers();if(NET.offChat)NET.offChat();if(NET.R)try{await NET.R.leave();}catch(e){}Object.assign(NET,{R:null,code:'',role:null,lob:null,offPeers:null,offChat:null,startId:null,hostPeer:null});NET_ASKSEEN.clear();CHAT.log=[];chatRender();netAskRender();if(!quiet){mpLobMsg('');renderMpLobby();}}
 function netWatch(){if(NET.offPeers)NET.offPeers();if(NET.offChat)NET.offChat();NET.offPeers=NET.R.onPeers(()=>{netOnPeers();});NET.offChat=NET.R.on('cmd',chatHear);}
@@ -3830,7 +3895,7 @@ function netAssignTeams(S){const kind=netTeamKind(S.mode),humans=G.chars.filter(
   if(kind==='rb'){for(const c of humans){const r=byPeer(c);c.team=r&&r.team==='b'?'blue':'red';}
     // bots fill the teams evenly, then everyone starts at their base
     const bots=G.chars.filter(c=>!c.human);let red=humans.filter(c=>c.team==='red').length,blue=humans.length-red;for(const b of bots){if(red<=blue){b.team='red';red++;}else{b.team='blue';blue++;}}
-    const placed=[];for(const c of G.chars){const B=BASES[c.team];const s=freeSpot(B.x,B.y,380,70,placed);c.x=s.x;c.y=s.y;c.z=groundAt(s.x,s.y,10);placed.push(c);c.face=Math.atan2(WORLD/2-c.y,WORLD/2-c.x);}
+    const placed=[];for(const c of G.chars){const B=BASES[c.team];const s=freeSpot(B.x,B.y,380,70,placed);c.x=s.x;c.y=s.y;c.z=groundAt(s.x,s.y,10);placed.push(c);c.face=openFace(c,Math.atan2(WORLD/2-c.y,WORLD/2-c.x));if(c.rin)c.rin.yaw=c.face;}
     for(const c of G.chars)if(c.m)buildCharModel(c);return;}
   const groups={};for(const c of humans){const r=byPeer(c);if(r&&r.team){(groups[r.team]=groups[r.team]||[]).push(c);}}
   const sizes=Object.values(groups).map(a=>a.length);if(!sizes.length){humans.forEach(c=>c.team=null);return;}
@@ -3887,7 +3952,7 @@ function netNear(x,y){if(!G)return false;for(const c of G.chars)if(c.remote&&Mat
 function netFeedHtml(h){const nm=esc(G.player.name||'Host');return String(h).split('<b style="color:#ffcb1f">You</b>').join('<b>'+nm+'</b>').split('<b style="color:#ffcb1f">you</b>').join('<b>'+nm+'</b>');}
 function netHostInit(){const N=G.net;Object.assign(N,{seq:0,nid:0,evq:[],cq:[],items:new Map(),pieces:new Map(),traps:new Map(),chests:new Set(),llamas:new Set(),snapT:0,evT:0,castT:0,rr:0,need:{}});
   G.chars.forEach((c,i)=>c.cid=i);N.cidNext=G.chars.length;N.cast=netBuildCast();netSendCast();}
-function netBuildCast(){return{id:G.net.start.id,ch:G.chars.map(c=>({id:c.cid,rc:c.raceCar?G.cars.indexOf(c.raceCar):-1,n:c.name,c:c.col,l:c.leg,z:c.zombie?1:0,k:c.zombie?null:OUTFITS.some(o=>o.id===(c.look&&c.look.id))?lookPack(c.look):Object.assign({full:1},c.look),t:c.team||null,p:c===G.player?((netMe()||{}).peer||null):c.peer||null,mh:c.maxHp||100})),
+function netBuildCast(){return{id:G.net.start.id,ch:G.chars.map(c=>({id:c.cid,rc:c.raceCar?G.cars.indexOf(c.raceCar):-1,n:c.name,c:c.col,l:c.leg,z:c.zombie?1:0,k:c.zombie?null:OUTFITS.some(o=>o.id===(c.look&&c.look.id))?lookPack(c.look):Object.assign({full:1},c.look),t:c.team||null,p:c===G.player?((netMe()||{}).peer||null):c.peer||null,mh:c.maxHp||100,f:Math.round((c.face||0)*100)/100})),
   st:G.storm?{C:G.storm.C}:null,bus:G.bus?{x0:G.bus.x0,y0:G.bus.y0,x1:G.bus.x1,y1:G.bus.y1,dur:G.bus.dur,z:G.bus.z,ang:G.bus.ang}:null,
   ll:(G.llamas||[]).map(L=>[ri(L.x),ri(L.y),ri(L.z),r2(L.m.rotation.y)]),vd:(G.vends||[]).map(V=>[ri(V.x),ri(V.y),ri(V.z),V.id,V.r]),
   cars:G.cars.map(c=>[ri(c.x),ri(c.y),ri(c.z),r2(c.ang),c.col]),len:G.len,t0:G.t0,squad:G.squad};}
@@ -3941,12 +4006,13 @@ function netHostEnd(){const N=G.net;if(!N||N.ended)return;N.ended=true;const res
 // ---- client ----
 function netClientInit(){const N=G.net;Object.assign(N,{casts:{},ready:false,buf:new Map(),lastSeq:0,need:0,aseq:0,acts:[],inT:0,hostT:null,hostRecv:0,wf:{}});
   announce('Joining the match…','Getting the island from the host.',3);
-  if(!NET.listening){NET.listening=true;NET.R.on('ev',m=>netClientEv(m.data));NET.R.on('cast',m=>netClientCast(m.data));NET.R.on('wf',m=>netClientWorld(m.data));}}
+  // F5: listen on each new room connection (after leaving and re-joining, the old listeners belong to the old room)
+  if(NET.listening!==NET.R){NET.listening=NET.R;NET.R.on('ev',m=>netClientEv(m.data));NET.R.on('cast',m=>netClientCast(m.data));NET.R.on('wf',m=>netClientWorld(m.data));}}
 function netClientCast(d){if(!NETC()||!d||d.id!==G.net.start.id||G.net.ready)return;const N=G.net;N.casts[d.i]=d.d;if(Object.keys(N.casts).length<d.n)return;
   let C;try{C=JSON.parse(Array.from({length:d.n},(_,i)=>N.casts[i]).join(''));}catch(e){N.casts={};return;}netClientBuild(C);}
 function netClientBuild(C){const N=G.net,myPeer=(netMe()||{}).peer;
   for(const c of G.chars)removeModel(c);G.chars=[];
-  N.byId=new Map();for(const e of C.ch){const c=makeChar(e.n,e.c,false);c.cid=e.id;c.rcIdx=e.rc;N.byId.set(e.id,c);c.leg=e.l;c.maxHp=e.mh;c.hp=e.mh;c.team=e.t;c.peer=e.p;if(e.z){c.zombie=true;}else c.look=lookUnpack(e.k);if(e.p)c.human=true;
+  N.byId=new Map();for(const e of C.ch){const c=makeChar(e.n,e.c,false);c.cid=e.id;c.rcIdx=e.rc;N.byId.set(e.id,c);c.leg=e.l;c.maxHp=e.mh;c.hp=e.mh;c.team=e.t;c.peer=e.p;if(e.f!=null)c.face=e.f;if(e.z){c.zombie=true;}else c.look=lookUnpack(e.k);if(e.p)c.human=true;
     if(e.p&&e.p===myPeer){c.isPlayer=true;c.ai=null;G.player=c;G.lp=c;makeHuman(c);c.mats=G.mats;c.slots[1]={id:'laser',r:5};c.cur=1;}
     buildCharModel(c);G.chars.push(c);}
   for(const it of G.items)removeModel(it);G.items=[];for(const p of G.projs)removeModel(p);G.projs=[];for(const t of G.traps)removeModel(t);G.traps=[];
@@ -4030,7 +4096,7 @@ function netClientProjs(dt){for(let i=G.projs.length-1;i>=0;i--){const p=G.projs
   if(dead){removeModel(p);G.projs.splice(i,1);}}}
 // what this player pressed, sent to the host
 function netClientKey(k){const N=G.net,p=G.player;if(['r','=','+','-','o','escape','p','m'].includes(k)&&!(k==='r'&&G.mode==='race'))return k==='o';
-  N.acts.push([++N.aseq,k]);if(N.acts.length>12)N.acts.shift();N.inT=0;
+  N.acts.push([++N.aseq,k]);if(N.acts.length>12)N.acts.shift();N.inT=0;if(k===' ')netBusJumpSent();
   if(k>='1'&&k<='5'){N.curT=performance.now();return false;}if(['z','x','c','v','t'].includes(k))return false;
   if(k===' '&&(p.state==='sky'||(p.state==='alive'&&!p.vehicle)))return false;return true;}
 function netClientWheel(dir){const N=G.net;N.acts.push([++N.aseq,dir>0?'wd+':'wd-']);N.curT=performance.now();}
@@ -4043,12 +4109,16 @@ function clientFrame(dt){const N=G.net;if(!N.ready||N.hostT==null)return;
   G.time=Math.min(N.hostT+(performance.now()-N.hostRecv)/1000,N.hostT+0.6);G.shake=Math.max(0,G.shake-dt*30);G.crossHit=Math.max(0,G.crossHit-dt);
   if(G.storm)updateStorm();const p=G.player;if(!G.paused)updateChar(p,dt);
   netInterp(dt);netClientProjs(dt);for(const q of G.pieces)if(q.grow<1){q.grow=Math.min(1,q.grow+dt*6);q.mesh.scale.y=0.05+0.95*q.grow;}
-  if(G.toastT>0){G.toastT-=dt;if(G.toastT<=0)$('prompt').hidden=true;}netClientSendInput(dt);netPingTick();}
+  if(G.toastT>0){G.toastT-=dt;if(G.toastT<=0)$('prompt').hidden=true;}netBusJumpRetry();netClientSendInput(dt);netPingTick();}
+// F6: a jump off the bus that the host hasn't done after 1.2 s is sent again (and logged, so the connection log shows it)
+function netBusJumpSent(){const N=G.net;if(G.player.state!=='bus'||N.busJumpT)return;N.busJumpT=performance.now();netLog('pressed jump on the bus');}
+function netBusJumpRetry(){const N=G.net;if(!N.busJumpT)return;if(G.player.state!=='bus'){N.busJumpT=0;return;}
+  if(performance.now()-N.busJumpT>1200){N.busJumpT=performance.now();N.acts.push([++N.aseq,' ']);if(N.acts.length>12)N.acts.shift();N.inT=0;netLog('still on the bus: sending the jump again');}}
 function netClientEnd(res,fin){if(!NETC()||G.ended)return;if(fin)G.final=fin.map(([id,pl,s])=>({c:byCid(id),place:pl,s})).filter(e=>e.c);const me=(netMe()||{}).peer,r=res[me]||{},p=G.player;p.kos=r.k??p.kos;p.deaths=r.d??p.deaths;if(r.pl)p.place=r.pl;G.win=!!r.w;G.draw=!!r.dr;
   if(G.win&&p.state==='alive'){announce('#1 VICTORY BONK!','You won the match!',4,'victory');sfx('victory');}G.endAt=G.time;setTimeout(()=>{if(G&&!G.ended)endGame();},G.win?2500:400);}
 // touch buttons on a player's device: send the action to the host (and do the movement-only part here)
 function netTouch(a,down){const p=G.player,N=G.net,send=k=>{N.acts.push([++N.aseq,k]);if(N.acts.length>12)N.acts.shift();};
-  if(a==='jump'){if(down){send(' ');if(p.state==='sky'||(p.state==='alive'&&!p.vehicle))playerSpace();}return true;}
+  if(a==='jump'){if(down){send(' ');netBusJumpSent();if(p.state==='sky'||(p.state==='alive'&&!p.vehicle))playerSpace();}return true;}
   if(a==='act'){const ac=TOUCH.act;if(!down){keys.delete('e');return true;}if(!ac)return true;if(ac.k==='revive')keys.add('e');else if(ac.k==='drive'||ac.k==='exit')send('f');else if(ac.k==='reset')send('r');else send('e');vib(15);return true;}
   const A=TACT[a];if(A&&A.piece){if(down){TOUCH.buildUI=true;G.buildMode=A.piece;TOUCH.lastPiece=A.piece;send('bm:'+A.piece);send('clk');buildHeld=true;}else buildHeld=false;return true;}
   if(a==='build'){if(down&&!p.vehicle){TOUCH.buildUI=!TOUCH.buildUI;G.buildMode=TOUCH.buildUI?(TOUCH.lastPiece||'wall'):null;send('bm:'+(G.buildMode||''));}return true;}
@@ -4142,7 +4212,7 @@ function netBotTakeover(c,peer,why){c.remote=false;c.human=false;c.isPlayer=fals
 let last=performance.now();
 function frame(t){const dt=Math.min(0.033,(t-last)/1000);last=t;if(innerWidth!==W||innerHeight!==H)viewportChanged();
   if(G&&!G.ended&&NETC())clientFrame(dt);else if(G&&!G.paused&&!G.ended&&!TOUCH.portrait)update(dt);if(G&&!G.ended&&NETH())netHostTick(dt);updateTouchUI();MUS.want=musicPick();
-  syncVisuals(dt);renderer.render(scene,camera);if(G&&!G.ended)updateHUD();
+  syncVisuals(dt);renderer.render(scene,camera);if(G&&!G.ended)updateHUD();autoGfxTick();
   requestAnimationFrame(frame);}
 function boot(data){
   const saved=(data&&data.opts)||store.get('bbr3d-opts');
