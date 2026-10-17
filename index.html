@@ -664,7 +664,7 @@ body.tediting .tb.ghost{opacity:.3}body.tediting #lobbyBar{display:none!importan
 // Release track of this copy: "stable" (main), "beta" or "alpha" (newest features). Set when a copy is published.
 const BONK_TRACK="beta";
 // Version: 0.1 is the first numbered release; every push to GitHub after that adds 0.1. "-dev" = not released yet.
-const BONK_VERSION="0.3";
+const BONK_VERSION="0.3.1";
 // Relay (TURN) for the website's direct links, from the owner's Metered.ca account (free plan, no card on file).
 // Only used when two devices cannot link directly (cellular data, strict school/office networks). These details are
 // public inside the website; the worst case of misuse is running out of the free monthly allowance, never a bill.
@@ -1790,7 +1790,7 @@ function openFace(c,pref){let best=pref,bestL=-1;
   return best;}
 function freeSpot(cx,cy,R,minD,others){
   for(let a=0;a<300;a++){const ang=Math.random()*TAU,r=Math.sqrt(Math.random())*R,x=clamp(cx+Math.cos(ang)*r,60,WORLD-60),y=clamp(cy+Math.sin(ang)*r,60,WORLD-60);
-    if(pointBlocked(x,y,22)||isBad(x,y)||inBuilding(x,y,-38)&&false)continue;let ok=true;if(others)for(const o of others)if(Math.hypot(o.x-x,o.y-y)<minD){ok=false;break;}if(ok)return{x,y};}
+    if(pointBlocked(x,y,22)||isBad(x,y)||PADS.some(p=>Math.hypot(p.x-x,p.y-y)<45))continue;let ok=true;if(others)for(const o of others)if(Math.hypot(o.x-x,o.y-y)<minD){ok=false;break;}if(ok)return{x,y};}
   for(let a=0;a<300;a++){const x=rand(80,WORLD-80),y=rand(80,WORLD-80);if(!pointBlocked(x,y,22)&&!isBad(x,y))return{x,y};}
   return{x:WORLD/2,y:WORLD/2+40};}
 const RAR_NAME=['Common','Uncommon','Rare','Epic','Legendary','Mythic'],RMUL=[0.85,1,1.15,1.3,1.45,1.6],AMUL=[0.8,1,1.15,1.3,1.5,1];
@@ -2414,7 +2414,9 @@ function tAct(a,down){const p=G&&G.player;if(a==='pause'){if(down&&G&&!G.ended)s
   else if(a==='heal'){if(down){const i=p.slots.findIndex((s,k)=>k>0&&s&&WEAPONS[s.id].kind==='heal');if(i>0){setBuildUI(false);p.cur=i;mouseDown=true;}else toast('No healing items!');}else if(WEAPONS[(p.slots[p.cur]||p.slots[0]).id].kind==='heal')mouseDown=false;}}
 function tLook(dx,dy){if(!G||G.ended||G.paused)return;const s=0.0068*TL().g.sens*(camera.fov/70);G.yaw+=dx*s;G.pitch=clamp(G.pitch-dy*s,-1.25,1.0);}
 (()=>{const tz=$('touch'),tb=$('tbtns');
-  const down=(el)=>e=>{if(TOUCH.editing)return;e.preventDefault();audioInit();const btn=e.target.closest('.tb');const P={x:e.clientX,y:e.clientY};
+  const down=(el)=>e=>{if(TOUCH.editing)return;e.preventDefault();audioInit();let btn=e.target.closest&&e.target.closest('.tb');
+    // iPhone: while one thumb holds the stick, Safari can send a second finger to the stick's area instead of the button under it
+    if(!btn){const h=document.elementFromPoint(e.clientX,e.clientY);btn=h&&h.closest('.tb');}const P={x:e.clientX,y:e.clientY};
     if(btn){P.kind='btn';P.a=btn.dataset.a;P.el=btn;btn.classList.add('down');tAct(P.a,true);}
     else if(el===tz){const right=TL().g.side==='right',inStick=right?e.clientX>innerWidth*0.55:e.clientX<innerWidth*0.45;
       if(inStick&&!TOUCH.stick){P.kind='stick';TOUCH.stick={x:e.clientX,y:e.clientY,id:e.pointerId};const st=$('tStick');st.style.left=e.clientX+'px';st.style.top=e.clientY+'px';st.classList.add('live');}else P.kind='look';}
@@ -3126,8 +3128,11 @@ const SHOW_PRIZE=300,SHOW_HIDE_COUNT=15,SHOW_AREA=900,SHOW_BRAWL_TK=40,COURSE_HU
 const showers=()=>G.chars.filter(c=>!c.zombie);
 const showRound=()=>SHOW_ROUNDS[G.show.i]||SHOW_ROUNDS[0];
 // move a character; a joiner's own device controls where they are, so it is told too (and the host ignores its old position briefly)
-function showTp(c,x,y){c.x=x;c.y=y;c.z=groundAt(x,y,400);c.vx=c.vy=c.vz=0;c.onGround=true;
-  if(c.remote){c.tpUntil=G.time+0.8;netTell(c,'tp',[ri(c.x),ri(c.y),ri(c.z)]);}}
+// (tx,ty): a spot to face, e.g. the middle of the circle or the finish line
+function showTp(c,x,y,tx,ty){for(const p of PADS)if(Math.hypot(p.x-x,p.y-y)<45){x+=x<p.x?-50:50;break;} // never start a round on a bounce pad
+  c.x=x;c.y=y;c.z=groundAt(x,y,400);c.vx=c.vy=c.vz=0;c.kx=c.ky=0;c.air=null;c.onGround=true;
+  if(tx!==undefined){c.face=Math.atan2(ty-y,tx-x);if(c.isPlayer){G.yaw=c.face;G.pitch=-0.15;}}
+  if(c.remote){c.tpUntil=G.time+0.8;netTell(c,'tp',tx!==undefined?[ri(c.x),ri(c.y),ri(c.z),r2(c.face)]:[ri(c.x),ri(c.y),ri(c.z)]);}}
 // the arena: an open spot near the middle (few walls, no water or lava), so the circle and the track have room
 function showArena(){let best=null,bs=-1;
   for(let a=0;a<160;a++){const x=WORLD/2+(Math.random()-0.5)*WORLD*0.5,y=WORLD/2+(Math.random()-0.5)*WORLD*0.5;let s=0;
@@ -3135,7 +3140,7 @@ function showArena(){let best=null,bs=-1;
     s-=Math.hypot(x-WORLD/2,y-WORLD/2)/400;if(s>bs){bs=s;best={x,y};}}
   return best;}
 // a ring of spots around (x,y), one per character
-function showRing(list,x,y,r0,r1){list.forEach((c,i)=>{const a=i/list.length*TAU,r=r0+Math.random()*(r1-r0),s=freeSpot(x+Math.cos(a)*r,y+Math.sin(a)*r,60,0,null);showTp(c,s.x,s.y);});}
+function showRing(list,x,y,r0,r1){list.forEach((c,i)=>{const a=i/list.length*TAU,r=r0+Math.random()*(r1-r0),s=freeSpot(x+Math.cos(a)*r,y+Math.sin(a)*r,60,0,null);showTp(c,s.x,s.y,x,y);});}
 function showSay(big,sub,dur){announce('🎤 '+big,sub,dur||3.5);sfx('alert');}
 
 XM.show={name:"Mr. Bonk's Challenge Show",
@@ -3149,9 +3154,9 @@ XM.show={name:"Mr. Bonk's Challenge Show",
   setup(i,delay){const S=G.show,R=SHOW_ROUNDS[i],all=showers();S.i=i;S.ph='intro';S.t=G.time+(delay||0)+6;S.out.clear();S.seek.clear();S.order=[];S.hold=new Set(all);S.done=new Set();
     for(const c of all){c.showTags=0;if(c.ai){c.ai.sh=null;c.ai.shT=0;}}
     for(const c of all){c.slots[1]=R.id==='circle'?{id:'foambat'}:null;c.cur=R.id==='circle'?1:0;c.batCd=0;}
-    if(R.id==='circle'){S.r=440;showRing(all,S.cx,S.cy,60,300);}
-    else if(R.id==='course'){S.sy=S.cy-500;S.fy=S.cy+500;all.forEach((c,k)=>showTp(c,S.cx+(k-(all.length-1)/2)*30,S.sy-40));}
-    else if(R.id==='light'){S.sy=S.cy-460;S.fy=S.cy+460;S.lt='r';all.forEach((c,k)=>showTp(c,S.cx+(k-(all.length-1)/2)*30,S.sy));}
+    if(R.id==='circle'){S.r=440;showRing(all,S.cx,S.cy,60,220);}
+    else if(R.id==='course'){S.sy=S.cy-500;S.fy=S.cy+500;all.forEach((c,k)=>showTp(c,S.cx+(k-(all.length-1)/2)*30,S.sy-40,S.cx+(k-(all.length-1)/2)*30,S.fy));}
+    else if(R.id==='light'){S.sy=S.cy-460;S.fy=S.cy+460;S.lt='r';all.forEach((c,k)=>showTp(c,S.cx+(k-(all.length-1)/2)*30,S.sy,S.cx+(k-(all.length-1)/2)*30,S.fy));}
     else if(R.id==='hide'){const n=1+Math.floor(all.length/7),pool=all.slice().sort(()=>Math.random()-0.5);for(let k=0;k<n;k++)S.seek.add(pool[k]);showRing(all,S.cx,S.cy,40,140);}
     else if(R.id==='buttons'){S.buttons=[];const prize=Math.floor(Math.random()*12),traps=['boing','back','spin'];
       for(let k=0;k<12;k++){const s=freeSpot(S.cx,S.cy,SHOW_AREA*0.85,140,S.buttons);S.buttons.push({x:s.x,y:s.y,z:groundAt(s.x,s.y,10),prize:k===prize,trap:traps[k%3],pressed:false});}
@@ -4735,7 +4740,7 @@ function netApplyEv(e){const k=e[0];
 function netPersonal(t,d){const p=G.player;if(t==='toast')toast(d);else if(t==='ann')announce(d[0],d[1],d[2],d[3]);else if(t==='xp')xpEvent(d[0],d[1]);else if(t==='sfx')sfx(d);
   else if(t==='hd'){G.hostDriven=!!d;G.auto=d===1;G.joinAuto=d===1;if(d===1)announce('🤖 Autopilot ON','The game plays for you. Press '+(TOUCH.on?'🤖':'O')+' again to take over.',2);else if(d===0)announce('🎮 You are in control','',1.4);}
   else if(t==='tk'){PROG.tickets+=d;saveProg();}else if(t==='gfuel'){for(const id of['speed','boots','jetpack'])gadFuelAdd(id,d);}else if(t==='gsh'){gadFuelAdd('shield',d);p.bubbleHits=Math.max(0,(p.bubbleHits||0)+d);}
-  else if(t==='kb'){p.kx+=d[0];p.ky+=d[1];}else if(t==='tp'){p.x=d[0];p.y=d[1];p.z=d[2];p.vx=p.vy=p.vz=0;p.onGround=true;}else if(t==='vz'){p.vz=d;p.onGround=false;}else if(t==='elim'){G.elimN++;showElim(d);}}
+  else if(t==='kb'){p.kx+=d[0];p.ky+=d[1];}else if(t==='tp'){p.x=d[0];p.y=d[1];p.z=d[2];p.vx=p.vy=p.vz=0;p.kx=p.ky=0;p.air=null;p.onGround=true;if(d[3]!==undefined){p.face=G.yaw=d[3];G.pitch=-0.15;}}else if(t==='vz'){p.vz=d;p.onGround=false;}else if(t==='elim'){G.elimN++;showElim(d);}}
 function netClientSnap(S){const N=G.net;if(!N.ready||!S||(S.id&&S.id!==N.start.id))return;
   // a paused host keeps sending the same time: still a sign of life, and it carries the pause flag
   if(S.t===N.lastSnapT){N.hostPaused=!!S.hp;N.hostRecv=performance.now();N.hostT=S.t;return;}N.lastSnapT=S.t;N.hostT=S.t;N.hostRecv=performance.now();G.time=S.t;{const now=N.hostRecv;if(N.lastArr){const d=now-N.lastArr;N.avgI=N.avgI?N.avgI*0.9+d*0.1:d;N.jit=(N.jit||0)*0.9+Math.abs(d-N.avgI)*0.1;N.interpD=clamp((N.avgI*1.3+N.jit*2)/1000,0.05,0.2);}N.lastArr=now;}const me=(netMe()||{}).peer;
