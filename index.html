@@ -666,7 +666,7 @@ body.tediting .tb.ghost{opacity:.3}body.tediting #lobbyBar{display:none!importan
 // Release track of this copy: "stable" (main), "beta" or "alpha" (newest features). Set when a copy is published.
 const BONK_TRACK="beta";
 // Version: 0.1 is the first numbered release; every push to GitHub after that adds 0.1. "-dev" = not released yet.
-const BONK_VERSION="0.3.4";
+const BONK_VERSION="0.3.5";
 // Relay (TURN) for the website's direct links, from the owner's Metered.ca account (free plan, no card on file).
 // Only used when two devices cannot link directly (cellular data, strict school/office networks). These details are
 // public inside the website; the worst case of misuse is running out of the free monthly allowance, never a bill.
@@ -2603,7 +2603,8 @@ function autoAimOnLand(dt){const p=G.player,s=p.state;
 // Main: decide, steer, botAim, botUpdate, zombieUpdate
 // See also: update, combat
 /* ================= bots ================= */
-function los(a,b){const dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy),n=Math.ceil(d/24);for(let k=1;k<n;k++){if(blocked3D(a.x+dx*k/n,a.y+dy*k/n,lerp(a.z,b.z,k/n)+26))return false;}return true;}
+// (F33: up and down it samples every 4, finer than a roof is thick, so one bot right above another is checked through the roof too)
+function los(a,b){const dx=b.x-a.x,dy=b.y-a.y,n=Math.ceil(Math.max(Math.hypot(dx,dy)/24,Math.abs(b.z-a.z)/4));for(let k=1;k<n;k++){if(blocked3D(a.x+dx*k/n,a.y+dy*k/n,lerp(a.z,b.z,k/n)+26))return false;}return true;}
 function wScore(id,d){const w=WEAPONS[id],r=RATING[id];switch(w.kind){case 'melee':return d<w.range+60?r*1.2:r*0.45;case 'shot':return d<w.speed*w.life*0.75?r:r*0.3;case 'chicken':return d<600?r:r*0.3;case 'grenade':return d>110&&d<380?r:0.5;case 'trap':return d<140?3.5:0.2;case 'heal':return 0;case 'rocket':return d>140&&d<800?r:r*0.3;default:return 10;}}
 function inRange(w,d){switch(w.kind){case 'melee':return d<w.range+8;case 'shot':return d<w.speed*w.life*0.8;case 'chicken':return d<600;case 'grenade':return d>90&&d<420;case 'trap':return d<150;case 'heal':return false;case 'rocket':return d>120&&d<800;default:return d<950;}}
 // would tryPickup (pickups module) take this item? The same rules, so a bot never stands on an item it can't pick up
@@ -2622,7 +2623,9 @@ function lootProgress(ai,d){const k=ai.gx+','+ai.gy;if(ai.gKey!==k||d<ai.gBest-2
   if(G.time-ai.gT>5){(ai.noGo||(ai.noGo=new Map())).set(k,G.time+30);ai.gx=null;ai.gKey=null;ai.mode='wander';return true;}return false;}
 function decide(c){const ai=c.ai,D=G.diff;stuckCheck(c,0.25);
   let best=null,bd=D.vision;
-  for(const o of G.chars){if(!isEnemy(c,o)||(o.state!=='alive'&&o.state!=='dbno')||o.invuln>0)continue;const d=dist(c,o);if(d<bd&&(d<150||los(c,o))){best=o;bd=d;}}
+  // F33: a target it can't see for 2.5 s (one bot on a roof, one inside below) is left alone for 5 s, so two bots never stand there "fighting" through a roof
+  if(ai.target){ai.losT=los(c,ai.target)?0:(ai.losT||0)+0.25;if(ai.losT>=2.5){ai.ignore=ai.target;ai.ignoreT=G.time+5;ai.target=null;ai.losT=0;}}
+  for(const o of G.chars){if(!isEnemy(c,o)||(o.state!=='alive'&&o.state!=='dbno')||o.invuln>0||(o===ai.ignore&&G.time<ai.ignoreT))continue;const d=dist(c,o);if(d<bd&&((d<150&&Math.abs(o.z-c.z)<40)||los(c,o))){best=o;bd=d;}}
   if(ai.target&&ai.target.state==='alive'&&ai.target.invuln<=0){const cd=dist(c,ai.target);if(cd<D.vision*1.3&&!(best&&bd<cd*0.6))best=ai.target;}
   if(best!==ai.target){ai.target=best;ai.reactT=D.react*rand(0.7,1.3);ai.aimErr=(Math.random()*2-1)*D.aimErr;ai.aimErr2=(Math.random()*2-1)*D.aimErr;}
   const sc=safeCircle(),dc=Math.hypot(c.x-sc.x,c.y-sc.y);
