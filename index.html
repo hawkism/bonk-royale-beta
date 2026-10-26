@@ -666,7 +666,7 @@ body.tediting .tb.ghost{opacity:.3}body.tediting #lobbyBar{display:none!importan
 // Release track of this copy: "stable" (main), "beta" or "alpha" (newest features). Set when a copy is published.
 const BONK_TRACK="beta";
 // Version: 0.1 is the first numbered release; every push to GitHub after that adds 0.1. "-dev" = not released yet.
-const BONK_VERSION="0.3.3";
+const BONK_VERSION="0.3.4";
 // Relay (TURN) for the website's direct links, from the owner's Metered.ca account (free plan, no card on file).
 // Only used when two devices cannot link directly (cellular data, strict school/office networks). These details are
 // public inside the website; the worst case of misuse is running out of the free monthly allowance, never a bill.
@@ -2141,11 +2141,10 @@ function updateDrones(dt){
   }
 }
 /* ================= the Bonk Hospital =================
-   One building on every map (the one nearest the middle) is the Bonk Hospital, with a big red cross on top. Rescue
-   drones carry bonked players in through its door; while they wait they watch the busiest action on the island
-   (hospitalWatch moves their camera there), then a drone flies them back out and drops them in. Players who are out
-   for good (no more respawns) still spectate as before. Maps are built the same on every device, so everyone agrees
-   which building it is. */
+   The Bonk Hospital, with a big red cross on top, has its own little island off the north edge (hospIsle, maps). Rescue
+   drones carry bonked players in through its door; while they wait, the camera stays with them in the doorway, getting
+   patched up (hospitalWatch), then a drone flies them back out and drops them in. Players who are out for good (no more
+   respawns) still spectate as before. Maps are built the same on every device, so everyone agrees where it is. */
 let HOSP=null;// {b, x, y}: the hospital building and the spot just outside its front door (doorways are always on the bottom side)
 // the hospital is on its own little island off the north edge (hospIsle in the maps module)
 function buildHospital(){HOSP=null;const b=HOSP_ISLE.b;if(!b)return;HOSP={b,x:b.x+b.w/2,y:b.y+b.h+45};
@@ -2157,12 +2156,12 @@ function buildHospital(){HOSP=null;const b=HOSP_ISLE.b;if(!b)return;HOSP={b,x:b.
   x.font='900 46px "Luckiest Guy",system-ui,sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText('🏥 BONK HOSPITAL',256,50,490);
   const sign=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c)}));sign.scale.set(150,28,1);sign.position.set(cx,groundAt(HOSP.x,HOSP.y,10)+96,b.y+b.h+8);world.add(sign);
   g.position.set(cx,groundAt(cx,cy,10)+190,cy);g.userData.spin=true;world.add(g);HOSP.cross=g;}
-// where a player waiting in the hospital looks: the spot with the most players and bots, re-checked every 1.5 s, followed smoothly
+// F32: while you wait in the hospital, the camera stays with you there (it used to fly off to the busiest action, which
+// felt odd: you came back out about when it got there). You stand in the doorway, facing out, with green + sparkles.
 function hospitalWatch(p,dt){if(p.state!=='gone'||p.eliminated||!HOSP){p.watch=null;return null;}
-  const W=p.watch||(p.watch={x:HOSP.x,y:HOSP.y,t:0,tg:null});W.t-=dt;
-  if(W.t<=0||!W.tg||W.tg.state!=='alive'){W.t=1.5;let best=null,bn=-1;
-    for(const c of G.chars){if(c===p||c.state!=='alive')continue;let n=0;for(const o of G.chars)if(o.state==='alive'&&Math.abs(o.x-c.x)<600&&Math.abs(o.y-c.y)<600)n++;if(n>bn){bn=n;best=c;}}W.tg=best;}
-  if(W.tg){const k=Math.min(1,dt*1.5);W.x+=(W.tg.x-W.x)*k;W.y+=(W.tg.y-W.y)*k;}
+  const W=p.watch||(p.watch={x:p.x,y:p.y});W.x=p.x;W.y=p.y;p.face=Math.PI/2;
+  if(!NETC()&&p.respawnAt>G.time)p.hp=Math.min(p.maxHp,p.hp+(p.maxHp-p.hp)*dt/Math.max(dt,p.respawnAt-G.time-1)); // health fills back up while you wait
+  if(Math.random()<dt*3)burst(p.x,p.y,groundAt(p.x,p.y,10)+50,2,'star','#5cff7a',40);
   if(HOSP.cross)HOSP.cross.rotation.y+=dt*0.8;return W;}
 // @module src/js/19-storm-supply-zombies.js: The battle royale storm, supply drops, and zombie waves.
 // Main: updateStorm, safeCircle, dropSupply, startWave, spawnZombie, updateZombies
@@ -3793,7 +3792,7 @@ function syncVisuals(dt){
   for(const car of G.cars){if(car.dead)continue;if(car.kind==='mech'){animMech(car,dt);continue;}if(car.kind==='plane'||car.kind==='boat'){animCraft(car,dt);continue;}const cm=car.m;cm.position.set(car.x,car.z,car.y);cm.rotation.set(car.onGround?0:-clamp(car.vz/1500,-0.35,0.35),Math.PI/2-car.ang,0,'YXZ');
     cm.userData.wheels.forEach((w,i)=>{w.rotation.x=car.wheelRot;w.rotation.y=i<2?-car.steer*0.5:0;});}
   for(const c of G.chars){if(!c.m)buildCharModel(c);const m=c.m,g=m.g;g.scale.setScalar(c.vehicle&&c.vehicle.boss&&c.state==='alive'?BOSS.scale:1);
-    g.visible=!(c.state==='gone'||c.state==='bus')&&!(c.invuln>0&&Math.floor(t*12)%2)&&(c===p||Math.hypot(c.x-camera.position.x,c.y-camera.position.z)<3200);
+    g.visible=!((c.state==='gone'&&!(c===p&&p.watch))||c.state==='bus')&&!(c.invuln>0&&Math.floor(t*12)%2)&&(c===p||Math.hypot(c.x-camera.position.x,c.y-camera.position.z)<3200);
     if(!g.visible)continue;
     g.position.set(c.x,c.z-(c.wet?5:0),c.y);g.rotation.set(0,Math.PI/2-c.face,0);
     setHeld(c);gadgetVisual(c,g,t);
@@ -3880,9 +3879,10 @@ function updateCamera(dt){
   if(G.victory&&G.player.state==='alive'){const p=G.player,a=G.time*0.5;if(camera.fov!==70){camera.fov=70;camera.updateProjectionMatrix();}$('scope').hidden=true;
     camera.position.set(p.x+Math.cos(a)*105,p.z+50,p.y+Math.sin(a)*105);camPos.copy(camera.position);camera.lookAt(p.x,p.z+30,p.y);return;}
   const p=specFollow()||G.player;let fx=p.x,fy=p.y,fz=p.z+42,dist0=125,sh=26;if(p.vehicle){const mk=p.vehicle.kind==='mech',s=p.vehicle.boss?BOSS.scale:1;dist0=mk?250*s:215;sh=mk?34*s:0;fz=p.z+(mk?118*s:64);}
+  if(p.state!=='gone')p.hospCam=0;
   if(p.state==='bus'&&G.bus){fx=G.bus.x;fy=G.bus.y;fz=G.bus.z;dist0=520;sh=0;}
   else if(p.state==='sky'){dist0=170;sh=10;}
-  else if(p.state==='gone'&&hospitalWatch(p,dt)){fx=p.watch.x;fy=p.watch.y;fz=groundAt(fx,fy,10)+42;dist0=260;sh=0;} // in the Bonk Hospital: watch the action
+  else if(p.state==='gone'&&hospitalWatch(p,dt)){if(!p.hospCam){p.hospCam=1;G.yaw=-Math.PI/2;G.pitch=-0.18;}fx=p.watch.x;fy=p.watch.y;fz=groundAt(fx,fy,10)+42;dist0=230;sh=0;} // in the Bonk Hospital: the camera stays with you (F32)
   else if(p.state==='gone'||p.state==='carried'||p.state==='down'){fx=p.state==='carried'?p.x:p.koX;fy=p.state==='carried'?p.y:p.koY;fz=(p.state==='carried'?p.z:0)+42;dist0=200;sh=0;}
   const d=lookDir(),rx=-Math.sin(G.yaw),ry=Math.cos(G.yaw);
   const hx=fx+rx*sh,hy=fy+ry*sh,hz=fz+6;let L=dist0;
@@ -3929,7 +3929,7 @@ function updateHUD(){updateNetHUD();gadgetHud();{const at=$('autoTag'),on=!!(G&&
   if(p.eliminated){rs.hidden=false;setT(rs,G.mode==='zombie'?`The zombies got you! You cleared ${G.z.cleared} wave${G.z.cleared===1?'':'s'}.`:`You're out! You placed #${p.place}.`);}
   else if(p.state==='dbno'){rs.hidden=false;setT(rs,"You're knocked down! Crawl to cover. "+Math.max(0,Math.ceil(p.bleed))+'% left');}
   else if(p.state==='down'||p.state==='carried'||p.state==='gone'){rs.hidden=false;const n=Math.max(1,Math.ceil(p.respawnAt-G.time));
-    setT(rs,HOSP&&p.state==='gone'?`🏥 Bonk Hospital! Watching the action · back in ${n}…`:HOSP&&p.state==='carried'?`🚁 Off to the Bonk Hospital… back in ${n}…`:`Rescue drone has you! Back in ${n}…`);}
+    setT(rs,HOSP&&p.state==='gone'?`🏥 Bonk Hospital! Getting patched up · back in ${n}…`:HOSP&&p.state==='carried'?`🚁 Off to the Bonk Hospital… back in ${n}…`:`Rescue drone has you! Back in ${n}…`);}
   else rs.hidden=true;
   const pr=$('prompt');
   if(G.toastT<=0){let h='';if(p.state==='bus')h='Press <kbd>Space</kbd> to jump out of the bus!';else if(p.state==='sky'&&!p.glide)h='Press <kbd>Space</kbd> to open your glider';
