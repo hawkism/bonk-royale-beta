@@ -666,7 +666,7 @@ body.tediting .tb.ghost{opacity:.3}body.tediting #lobbyBar{display:none!importan
 // Release track of this copy: "stable" (main), "beta" or "alpha" (newest features). Set when a copy is published.
 const BONK_TRACK="beta";
 // Version: 0.1 is the first numbered release; every push to GitHub after that adds 0.1. "-dev" = not released yet.
-const BONK_VERSION="0.3.2";
+const BONK_VERSION="0.3.3";
 // Relay (TURN) for the website's direct links, from the owner's Metered.ca account (free plan, no card on file).
 // Only used when two devices cannot link directly (cellular data, strict school/office networks). These details are
 // public inside the website; the worst case of misuse is running out of the free monthly allowance, never a bill.
@@ -3184,7 +3184,7 @@ XM.show={name:"Mr. Bonk's Challenge Show",
     for(const c of G.chars)c.pts=0;
     if(NETC())return; // joiners get everything from the host
     const a=showArena();G.show.cx=a.x;G.show.cy=a.y;
-    showSay("Mr. Bonk's Challenge Show!",'Four challenges. Win rounds for points. The most points wins '+SHOW_PRIZE+' tickets!',4);
+    showSay("Mr. Bonk's Challenge Show!",'Five challenges. Win rounds for points. The most points wins '+SHOW_PRIZE+' tickets!',4);
     this.setup(0,4);},
   // put everyone in place for round i and explain it
   setup(i,delay){const S=G.show,R=SHOW_ROUNDS[i],all=showers();S.i=i;S.ph='intro';S.t=G.time+(delay||0)+6;S.out.clear();S.seek.clear();S.order=[];S.hold=new Set(all);S.done=new Set();
@@ -3366,7 +3366,7 @@ XM.show={name:"Mr. Bonk's Challenge Show",
     if(R.id==='buttons')for(const b of S.buttons)if(!b.pressed){m.fillStyle='#e2312b';m.beginPath();m.arc(b.x*k,b.y*k,4,0,TAU);m.fill();}},
   cleanup(){if(G.show)this.clearProps();},
   end(p,b){if(G.win)G.tkBonus=(G.tkBonus||0)+SHOW_PRIZE; // the big prize (counted when the end screen adds up tickets)
-    return endFFA(p,b,"Mr. Bonk's Challenge Show: the most points after four challenges wins.",e=>e.s+' pts',
+    return endFFA(p,b,"Mr. Bonk's Challenge Show: the most points after five challenges wins.",e=>e.s+' pts',
       me=>[[me.s,'Show points'],['#'+me.place,'Finish'],[G.win?'+'+SHOW_PRIZE:'0','🎤 Prize tickets']]);}};
 // multiplayer: the show state for joiners (who never run update) — see XMNET in net-mode-state
 const SHOW_NET={
@@ -4000,7 +4000,7 @@ function startGame(){readOpts();audioInit();if(lobbyChar&&lobbyChar.m)lobbyChar.
 function setPaused(v){if(!G||G.ended)return;if(G.net&&G.paused!==v)netLog((v?"paused":"resumed")+" with the pause button");G.paused=v;$('pause').hidden=!v;if(v){touchRelease();keys.clear();mouseDown=false;if(locked&&document.exitPointerLock)document.exitPointerLock();$('resumeBtn').focus();}
   else{if(document.activeElement)document.activeElement.blur();requestLock();}}
 function toMenu(target){if(NETH()&&!G.ended)netHostEnd();if(NETC()&&NET.R)NET.R.presence({left:G.net.start.id,inp:null}).catch(()=>{});if(G)cleanupGame();G=null;if(locked&&document.exitPointerLock)document.exitPointerLock();
-  ['hud','pause','end','respawn','prompt','cross','lockHint','scope','autoTag','pingChip','netTag','scoreboard'].forEach(id=>$(id).hidden=true);annEl.hidden=true;$('stormVig').style.opacity='0';showScreen(typeof target==='string'?target:'welcome');}
+  ['hud','pause','end','respawn','prompt','cross','lockHint','scope','autoTag','pingChip','netTag','scoreboard','elim','poi','useBar'].forEach(id=>$(id).hidden=true);annEl.hidden=true;$('stormVig').style.opacity='0';showScreen(typeof target==='string'?target:'welcome');}
 function endGame(){if(NETH())netHostEnd();if(G.net)NET.lastNet=true;else NET.lastNet=false;
   G.ended=true;if(locked&&document.exitPointerLock)document.exitPointerLock();const p=G.player,b=getBest();let title,sub,cls,stats;$('endBoard').hidden=true;
   if(XM[G.mode]){const r=XM[G.mode].end(p,b);title=r.title;sub=r.sub;cls=r.cls;stats=r.stats;}
