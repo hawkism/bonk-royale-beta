@@ -174,7 +174,9 @@ body.touch #chatFeed{bottom:auto;top:34%;left:calc(12px + var(--sl));max-width:4
 #scoreboard h3{margin:0 0 8px;font-family:var(--display);font-weight:400;font-size:1.4rem;color:var(--yellow)}#scoreboard table{width:100%;border-collapse:collapse;font-weight:800;font-size:.95rem}
 #scoreboard th{text-align:left;font-size:.75rem;text-transform:uppercase;opacity:.7;padding:2px 6px}#scoreboard td{padding:5px 6px;border-top:1px solid rgba(255,255,255,.12)}#scoreboard tr.me td{background:rgba(255,203,31,.18)}
 #scoreboard td i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}#scoreboard small{display:block;margin-top:6px;opacity:.7;font-weight:800}
-#autoTag{position:fixed;left:50%;bottom:calc(205px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:4;pointer-events:none;font-family:var(--display);font-size:1.1rem;color:#fff;background:linear-gradient(90deg,#7a3fd1,#1f6fd6);padding:6px 14px 5px;border-radius:999px;box-shadow:0 3px 0 rgba(27,34,53,.35);animation:wpulse 1.6s ease-in-out infinite;white-space:nowrap}
+#autoTag{position:fixed;left:50%;bottom:calc(205px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:4;pointer-events:none;font-family:var(--display);font-size:1.1rem;color:#fff;background:linear-gradient(90deg,#7a3fd1,#1f6fd6);padding:6px 14px 5px;border-radius:999px;box-shadow:0 3px 0 rgba(27,34,53,.35);animation:apulse 1.6s ease-in-out infinite;white-space:nowrap}
+@keyframes apulse{0%,100%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.06)}} /* keeps it centred (wpulse would drop the translateX) */
+body:not(.touch) #prompt:not([hidden])~#autoTag{bottom:calc(262px + env(safe-area-inset-bottom,0px))} /* above a key hint (e.g. the car controls), not on it */
 #lockHint{position:fixed;left:50%;top:calc(50% + 34px);transform:translateX(-50%);font-weight:900;color:#fff;background:rgba(27,34,53,.7);padding:4px 12px;border-radius:8px;z-index:5;pointer-events:none}
 #stormVig{position:fixed;inset:0;pointer-events:none;box-shadow:inset 0 0 120px 30px rgba(122,63,209,.75);opacity:0;transition:opacity .3s;z-index:3}
 #muteBtn{position:fixed;left:calc(16px + var(--sl));bottom:calc(14px + env(safe-area-inset-bottom,0px));pointer-events:auto;font-family:var(--display);font-size:.95rem;border:0;border-radius:8px;padding:7px 12px 6px;background:rgba(251,248,241,.92);color:var(--ink);cursor:pointer;box-shadow:0 3px 0 rgba(27,34,53,.25);z-index:6}
@@ -208,7 +210,7 @@ body.touch #chatFeed{bottom:auto;top:34%;left:calc(12px + var(--sl));max-width:4
 body.touch #buildHint,body.touch #muteBtn,body.touch #lockHint,body.touch .keys:not(.tkeys){display:none!important}
 body:not(.touch) .tkeys{display:none}
 body.touch #slots{pointer-events:auto}body.touch .slot{touch-action:none}
-body.touch #tl{max-width:calc(100% - 300px)}body.touch #mini{width:120px;height:120px}
+body.touch #tl{max-width:var(--tlw,calc(100% - 300px))}body.touch #mini{width:120px;height:120px}
 /* touch: kill feed moves to top-center, 3 short lines, so nothing on the right covers the buttons */
 body.touch #feed{position:fixed;left:50%;top:calc(58px + env(safe-area-inset-top,0px));transform:translateX(-50%);justify-items:center;font-size:.75rem;max-width:min(360px,60vw);z-index:4}
 body.touch #feed div{text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}body.touch #feed div:nth-child(n+4){display:none}
@@ -664,7 +666,7 @@ body.tediting .tb.ghost{opacity:.3}body.tediting #lobbyBar{display:none!importan
 // Release track of this copy: "stable" (main), "beta" or "alpha" (newest features). Set when a copy is published.
 const BONK_TRACK="beta";
 // Version: 0.1 is the first numbered release; every push to GitHub after that adds 0.1. "-dev" = not released yet.
-const BONK_VERSION="0.3.1";
+const BONK_VERSION="0.3.2";
 // Relay (TURN) for the website's direct links, from the owner's Metered.ca account (free plan, no card on file).
 // Only used when two devices cannot link directly (cellular data, strict school/office networks). These details are
 // public inside the website; the worst case of misuse is running out of the free monthly allowance, never a bill.
@@ -941,10 +943,10 @@ function addOb(o){
 function removeOb(o){const k=OB.indexOf(o);if(k>=0)OB.splice(k,1);for(const c of o.cells){const L=GRID[c],n=L.indexOf(o);if(n>=0)L.splice(n,1);}}
 const cellOf=(x,y)=>GRID[clamp(Math.floor(x/T),0,N-1)+clamp(Math.floor(y/T),0,N-1)*N];
 function pointBlocked(x,y,pad){ // blocks walking at ground level
-  if(x<pad||y<pad||x>WORLD-pad||y>WORLD-pad)return true;
+  if((x<pad||y<pad||x>WORLD-pad||y>WORLD-pad)&&!inIsle(x,y,pad))return true;
   for(const o of cellOf(x,y)){if(o.z0>30)continue;if(!inFoot(o,x,y,pad))continue;if(o.t==='ramp'||surfAt(o,x,y)>20)return true;}return false;
 }
-function blocked3D(x,y,z){if(z<0)return true;if(x<0||y<0||x>WORLD||y>WORLD)return false;for(const o of cellOf(x,y)){if(inFoot(o,x,y,0)&&z>=o.z0&&z<=surfAt(o,x,y))return o;}return false;}
+function blocked3D(x,y,z){if(z<0)return true;if((x<0||y<0||x>WORLD||y>WORLD)&&!inIsle(x,y,-40))return false;for(const o of cellOf(x,y)){if(inFoot(o,x,y,0)&&z>=o.z0&&z<=surfAt(o,x,y))return o;}return false;}
 function groundAt(x,y,z){let g=0;for(const o of cellOf(x,y)){if(!inFoot(o,x,y,3))continue;const top=surfAt(o,x,y);if(top<=z+STEP&&top>g)g=top;}return g;}
 function inBuilding(x,y,m){for(const b of BUILDINGS)if(x>b.x-m&&x<b.x+b.w+m&&y>b.y-m&&y<b.y+b.h+m)return true;return false;}
 function genMap(id){
@@ -993,7 +995,24 @@ function genMap(id){
   for(let a=0,n=0;a<3000&&n<more(24);a++){const x=R()*WORLD,y=R()*WORLD,r=18+R()*10;if(free(x,y,r)){addOb({t:'cyl',x,y,r,z0:0,h:Math.round(r*1.35),kind:'rock',v:R()});n++;}}
   for(let a=0,n=0;a<3000&&n<more(7);a++){const x=R()*WORLD,y=R()*WORLD;if(!isBad(x,y)&&!inBuilding(x,y,60)&&free2(x,y,40)){PADS.push({x,y});n++;}}
   for(let a=0,n=0;a<3000&&n<more(10);a++){const x=R()*WORLD,y=R()*WORLD;if(free(x,y,20)){CHEST_SPOTS.push({x,y});n++;}}
+  hospIsle();
 }
+// the Bonk Hospital's own little island, just off the north edge of the map, joined to the end of the north-south road by a
+// bridge (so it takes no room on the map). Its walls are obstacles like any building's; it is not in BUILDINGS (no loot, no
+// hiding bots, no map label). The drones fly there (drones module), and you can walk over and visit.
+const HOSP_ISLE={};
+function hospIsle(){const cx=(N>>1)*T+T/2,I=HOSP_ISLE,S=40,bw=320,bh=200,x0=cx-bw/2,y0=-500,col='#f4f1e8';
+  Object.assign(I,{cx,x0:cx-260,x1:cx+260,y0:-580,y1:-140,bx0:cx-70,bx1:cx+70,b:{x:x0,y:y0,w:bw,h:bh,col,name:'Bonk Hospital'}});
+  const W=(x,y)=>addOb({t:'box',x,y,w:S,d:S,z0:0,h:96,col,wall:true});
+  for(let k=0;k<bw/S;k++){W(x0+k*S,y0);if(k!==bw/S/2-1&&k!==bw/S/2)W(x0+k*S,y0+bh-S);} // the front door faces the map
+  for(let k=1;k<bh/S-1;k++){W(x0,y0+k*S);W(x0+bw-S,y0+k*S);}}
+// keep a character on solid ground: the map, the hospital island or its bridge (the nearest one, so each edge works like a wall)
+function keepIn(c,r){if(c.x>=r&&c.x<=WORLD-r&&c.y>=r&&c.y<=WORLD-r)return;if(inIsle(c.x,c.y,r))return;const I=HOSP_ISLE,boxes=[[r,WORLD-r,r,WORLD-r]];
+  if(I.cx)boxes.push([I.x0+r+1,I.x1-r-1,I.y0+r+1,I.y1-r-1],[I.bx0+r+1,I.bx1-r-1,I.y1-79,79]);let bx=0,by=0,bd=1e18;
+  for(const[x0,x1,y0,y1]of boxes){const x=clamp(c.x,x0,x1),y=clamp(c.y,y0,y1),d=(x-c.x)**2+(y-c.y)**2;if(d<bd){bd=d;bx=x;by=y;}}c.x=bx;c.y=by;}
+// is (x,y) on the hospital island or its bridge (pad: room to keep from the edge)
+function inIsle(x,y,pad){const I=HOSP_ISLE;if(!I.cx)return false;
+  return(x>I.x0+pad&&x<I.x1-pad&&y>I.y0+pad&&y<I.y1-pad)||(x>I.bx0+pad&&x<I.bx1-pad&&y>I.y1-80&&y<80);}
 // @module src/js/07-three-setup.js: three.js renderer, scene, camera, lights and shared geometry/material caches; building the 3D world; re-measuring the screen (iOS fixes).
 // Main: renderer, scene, camera, resize, viewportChanged, GEO, mat, mesh, buildWorld
 // See also: maps, visuals
@@ -1102,6 +1121,9 @@ function buildWorld(){
   const gm=new THREE.MeshLambertMaterial({map:tex,emissive:new THREE.Color(0xffffff),emissiveMap:emTex,emissiveIntensity:MAP.hurt?0.85:0});
   const ground=new THREE.Mesh(new THREE.PlaneGeometry(WORLD,WORLD).rotateX(-Math.PI/2),gm);ground.position.set(WORLD/2,0,WORLD/2);ground.receiveShadow=true;world.add(ground);
   const base=new THREE.Mesh(GEO.box,mat(MAP.side));base.scale.set(WORLD+8,40,WORLD+8);base.position.set(WORLD/2,-40.5,WORLD/2);world.add(base);
+  {const I=HOSP_ISLE,L=(x0,x1,y0,y1,top)=>{const sd=new THREE.Mesh(GEO.box,mat(MAP.side));sd.scale.set(x1-x0,40,y1-y0);sd.position.set((x0+x1)/2,-41,(y0+y1)/2);world.add(sd);
+      const tp=new THREE.Mesh(GEO.box,mat(top));tp.scale.set(x1-x0,1,y1-y0);tp.position.set((x0+x1)/2,-1,(y0+y1)/2);tp.receiveShadow=true;world.add(tp);};
+    L(I.x0,I.x1,I.y0,I.y1,MAP.tiles[0]);L(I.bx0,I.bx1,I.y1-2,2,MAP.tiles[1]);} // the hospital island and its bridge (maps module)
   if(MAP.outside){const om=MAP.outsideGlow?basic(MAP.outside):new THREE.MeshLambertMaterial({color:MAP.outside});const out=new THREE.Mesh(new THREE.PlaneGeometry(14000,14000).rotateX(-Math.PI/2),om);out.position.set(WORLD/2,-28,WORLD/2);world.add(out);}
   // smooth painted walls with a darker top trim
   for(const o of OB){if(o.t==='box'&&o.wall){S('box',o.col,o.x+o.w/2,o.y+o.d/2,0,o.w,o.h,o.d);S('box',shadeHex(o.col,0.75),o.x+o.w/2,o.y+o.d/2,o.h,o.w+2,5,o.d+2);S('box',shadeHex(o.col,0.85),o.x+o.w/2,o.y+o.d/2,0,o.w+1.5,8,o.d+1.5);}
@@ -1850,7 +1872,9 @@ function cleanupGame(){engineStop();cleanupLoot();if(XM[G.mode]&&XM[G.mode].clea
 const annEl=$('announce');let annTimer=0;
 function announce(big,sub,dur=2.6,cls){if(NET_CTX){netTell(NET_CTX,'ann',[big,sub,dur,cls]);return;}if(NETH()&&!NET_NOFWD&&NET_ANN_OK.test(String(big)))netEv(['an',big,sub,dur,cls]);annEl.innerHTML='';annEl.className=cls||'';const b=document.createElement('div');b.className='big';b.textContent=big;annEl.appendChild(b);
   if(sub){const s=document.createElement('div');s.className='sub';s.textContent=touchText(sub);annEl.appendChild(s);}
-  annEl.classList.remove('pop');void annEl.offsetWidth;annEl.classList.add('pop');annEl.hidden=false;clearTimeout(annTimer);annTimer=setTimeout(()=>{annEl.hidden=true;},dur*1000);}
+  annEl.classList.remove('pop');void annEl.offsetWidth;annEl.classList.add('pop');annEl.hidden=false;clearTimeout(annTimer);annTimer=setTimeout(()=>{annEl.hidden=true;},dur*1000);poiBelowAnn();}
+// the place-name banner moves down below an announcement, so the two never cover each other
+function poiBelowAnn(){const el=$('poi');if(!el||el.hidden)return;el.style.top=annEl.hidden?'':Math.max(annEl.offsetTop+annEl.offsetHeight+6,innerHeight*0.24)+'px';} // (offset sizes: not shrunk by the pop animation)
 const textTex=new Map();
 function addText(x,y,z,text,col,size=16){if(NETH()&&netNear(x,y))netEv(['x',ri(x),ri(y),ri(z),text,col,size],1);
   const k=text+'|'+col;let t=textTex.get(k);if(!t){const c=document.createElement('canvas');c.width=256;c.height=64;const g=c.getContext('2d');let fs=48;const F=()=>g.font=fs+'px "Lilita One", "Trebuchet MS", sans-serif';F();while(g.measureText(text).width>232&&fs>18){fs-=2;F();}g.textAlign='center';g.textBaseline='middle';
@@ -1863,7 +1887,7 @@ function toast(t){if(NET_CTX){netTell(NET_CTX,'toast',t);return;}const el=$('pro
 let elimTimer=0,poiTimer=0;
 function showElim(name){if(NET_CTX){G.elimN--;netTell(NET_CTX,'elim',name);return;}const el=$('elim');el.innerHTML='<span>ELIMINATED</span> <b>'+esc(name)+'</b><small>'+G.elimN+' elimination'+(G.elimN===1?'':'s')+'</small>';
   el.hidden=false;el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop');clearTimeout(elimTimer);elimTimer=setTimeout(()=>{el.hidden=true;},2200);sfx('ding');}
-function showPoi(name){const el=$('poi');el.textContent=name;el.hidden=false;el.style.animation='none';void el.offsetWidth;el.style.animation='';clearTimeout(poiTimer);poiTimer=setTimeout(()=>{el.hidden=true;},2800);}
+function showPoi(name){const el=$('poi');el.textContent=name;el.hidden=false;poiBelowAnn();el.style.animation='none';void el.offsetWidth;el.style.animation='';clearTimeout(poiTimer);poiTimer=setTimeout(()=>{el.hidden=true;},2800);}
 const EMOTES=['Noodle Dance','Helicopter Spin','Jumping Jacks'];
 function startEmote(c){if(!G||c.state!=='alive'||!c.onGround)return;c.emoteIdx=((c.emoteIdx??-1)+1)%3;c.emote={type:c.emoteIdx,t:0};
   if(c.isPlayer){xpEvent('emote');G.buildMode=null;toast('Emote: '+EMOTES[c.emoteIdx]+'! Press B again for another.');}}
@@ -2123,9 +2147,8 @@ function updateDrones(dt){
    for good (no more respawns) still spectate as before. Maps are built the same on every device, so everyone agrees
    which building it is. */
 let HOSP=null;// {b, x, y}: the hospital building and the spot just outside its front door (doorways are always on the bottom side)
-function buildHospital(){HOSP=null;if(!BUILDINGS.length)return;let b=null,bd=1e9;
-  for(const q of BUILDINGS){const dd=Math.hypot(q.x+q.w/2-WORLD/2,q.y+q.h/2-WORLD/2);if(dd<bd){bd=dd;b=q;}}
-  b.name='Bonk Hospital';b.hosp=true;HOSP={b,x:b.x+b.w/2,y:b.y+b.h+45};
+// the hospital is on its own little island off the north edge (hospIsle in the maps module)
+function buildHospital(){HOSP=null;const b=HOSP_ISLE.b;if(!b)return;HOSP={b,x:b.x+b.w/2,y:b.y+b.h+45};
   const cx=b.x+b.w/2,cy=b.y+b.h/2,g=new THREE.Group(),red=basic('#e2312b'),white=basic('#ffffff');
   const B=(m,w,h,d,y)=>{const o=new THREE.Mesh(GEO.boxC,m);o.scale.set(w,h,d);o.position.y=y;g.add(o);return o;};
   B(white,96,96,10,0);B(red,72,22,12,0);B(red,22,72,12,0);
@@ -2375,7 +2398,11 @@ function renderTButtons(){const box=$('tbtns');box.innerHTML='';for(const b of T
 // buttons are placed by their centre; keep the whole button inside the safe button area (#tbtns) on any screen size
 function layoutTouch(){const k=tScale(),box=$('tbtns'),cw=box.clientWidth||innerWidth,ch=box.clientHeight||innerHeight;for(const b of TL().btns){if(!b.el)continue;const sz=Math.round(b.s*k),h=sz/2+2;
   b.el.style.left=clamp(b.x*cw,h,Math.max(h,cw-h))+'px';b.el.style.top=clamp(b.y*ch,h,Math.max(h,ch-h))+'px';b.el.style.setProperty('--s',sz+'px');b.el.style.setProperty('--o',b.o);}
-  const st=$('tStick');st.style.setProperty('--r',Math.round(130*k*TL().g.stick)+'px');if(!TOUCH.stick){st.style.left=(innerWidth*(TL().g.side==='right'?0.85:0.15))+'px';st.style.top=(innerHeight*0.72)+'px';}}
+  const st=$('tStick');st.style.setProperty('--r',Math.round(130*k*TL().g.stick)+'px');if(!TOUCH.stick){st.style.left=(innerWidth*(TL().g.side==='right'?0.85:0.15))+'px';st.style.top=(innerHeight*0.72)+'px';}
+  // the chips at the top left end before the first button up there (a long chip used to run under the 🏆 button)
+  {const tl=$('tl'),bx=box.getBoundingClientRect().left,x0=tl.getBoundingClientRect().left||16;let edge=1e9;
+    for(const b of TL().btns){if(!b.el||b.hide||b.y>0.2)continue;const L=bx+clamp(b.x*cw,0,cw)-Math.round(b.s*k)/2;if(L>x0+120)edge=Math.min(edge,L);}
+    tl.style.setProperty('--tlw',edge<1e9?Math.round(edge-x0-10)+'px':'calc(100% - 300px)');}}
 function setTouch(v){if(TOUCH.on===v)return;TOUCH.on=v;try{helpShots=null;}catch(e){}document.body.classList.toggle('touch',v);touchRelease();applyGfx();syncTouchDesc();if(v)renderTButtons();}
 function syncTouchDesc(){const d=$('touchDesc');if(d)d.textContent=TOUCH.pref==='auto'?(TOUCH.on?'Touch controls are on because this looks like a phone or tablet.':'Keyboard and mouse. Touch controls turn on by themselves when you touch the screen.'):TOUCH.pref==='on'?'Touch controls are always on.':'Touch controls are off.';
   const fs=$('fsBtn');if(fs)fs.hidden=!(TOUCH.on&&(document.documentElement.requestFullscreen||document.documentElement.webkitRequestFullscreen));
@@ -2549,7 +2576,7 @@ function aimPoint(maxD=1700){
   if(best)return{x:best.x,y:best.y,z:best.z+24,c:best,assist:true};
   return hit||{x:o.x+d.x*maxD,y:o.y+d.y*maxD,z:o.z+d.z*maxD};
 }
-function playerInput(c,dt){if(G.victory)return[0,0,false];
+function playerInput(c,dt){if(G.victory||(G.show&&G.show.dance))return[0,0,false];
   let f=0,s=0;if(keys.has('w'))f+=1;if(keys.has('s'))f-=1;if(keys.has('d'))s+=1;if(keys.has('a'))s-=1;const tStick=TOUCH.on&&TOUCH.mag>0&&!NET_CTX;if(tStick){f=-TOUCH.my;s=TOUCH.mx;}
   if(keys.has('arrowleft'))G.yaw-=2.4*dt;if(keys.has('arrowright'))G.yaw+=2.4*dt;if(keys.has('arrowup'))G.pitch=clamp(G.pitch+1.6*dt,-1.25,1);if(keys.has('arrowdown'))G.pitch=clamp(G.pitch-1.6*dt,-1.25,1);
   const cy=Math.cos(G.yaw),sy=Math.sin(G.yaw);let ix=cy*f-sy*s,iy=sy*f+cy*s;const l=Math.hypot(ix,iy);if(l){const am=tStick?Math.max(0.35,TOUCH.mag):1;ix=ix/l*am;iy=iy/l*am;}
@@ -2580,11 +2607,20 @@ function autoAimOnLand(dt){const p=G.player,s=p.state;
 function los(a,b){const dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy),n=Math.ceil(d/24);for(let k=1;k<n;k++){if(blocked3D(a.x+dx*k/n,a.y+dy*k/n,lerp(a.z,b.z,k/n)+26))return false;}return true;}
 function wScore(id,d){const w=WEAPONS[id],r=RATING[id];switch(w.kind){case 'melee':return d<w.range+60?r*1.2:r*0.45;case 'shot':return d<w.speed*w.life*0.75?r:r*0.3;case 'chicken':return d<600?r:r*0.3;case 'grenade':return d>110&&d<380?r:0.5;case 'trap':return d<140?3.5:0.2;case 'heal':return 0;case 'rocket':return d>140&&d<800?r:r*0.3;default:return 10;}}
 function inRange(w,d){switch(w.kind){case 'melee':return d<w.range+8;case 'shot':return d<w.speed*w.life*0.8;case 'chicken':return d<600;case 'grenade':return d>90&&d<420;case 'trap':return d<150;case 'heal':return false;case 'rocket':return d>120&&d<800;default:return d<950;}}
-function wants(c,id){if(id==='bricks'||id==='fuel'||id==='gshield')return false;if(id==='heart')return c.hp<75;const w=WEAPONS[id];if(c.slots.some(s=>s&&s.id===id))return !!w.ammo;if(c.slots.some((s,i)=>i>0&&!s))return true;let worst=99;for(let i=1;i<5;i++)worst=Math.min(worst,RATING[c.slots[i].id]);return RATING[id]>worst+0.5;}
+// would tryPickup (pickups module) take this item? The same rules, so a bot never stands on an item it can't pick up
+function wants(c,id,r){if(id==='bricks'||id==='fuel'||id==='gshield')return false;if(id==='heart')return c.hp<75;const w=WEAPONS[id];if(r===undefined)r=w.rar;
+  if(c.slots.some((s,i)=>i>0&&s&&s.id===id&&getR(s)===r))return !!w.ammo;if(c.slots.some((s,i)=>i>0&&!s))return true;if(c.isPlayer)return false; // (you on autopilot don't swap when your slots are full)
+  let worst=99;for(let i=1;i<5;i++)worst=Math.min(worst,rarScore(c.slots[i].id,getR(c.slots[i])));return rarScore(id,r)>worst+0.5;}
 function stuckCheck(c,step){const ai=c.ai;if(ai.wantMove&&Math.hypot(c.x-ai.lastX,c.y-ai.lastY)<5)ai.stuckT+=step;else ai.stuckT=0;
   if(ai.stuckT>0.75){ai.unstuckT=0.7;const a=Math.random()*TAU;ai.ux=Math.cos(a);ai.uy=Math.sin(a);ai.stuckT=0;ai.turn*=-1;ai.gx=null;
     let np=null,nd=90;for(const p of G.pieces){const d=Math.hypot(p.cx-c.x,p.cy-c.y);if(d<nd&&Math.abs(p.ob.z0-c.z)<60){nd=d;np=p;}}ai.breakP=np;}
   ai.lastX=c.x;ai.lastY=c.y;}
+// loot a bot can't reach (a chest behind a wall, say): no closer for 5 s, so it leaves that spot alone for 30 s
+// up on a roof, loot down on the ground is not reachable from here (the bot wanders, which takes it off the roof)
+const below=(c,o)=>c.z>30&&(o.z||0)<c.z-30;
+const gaveUp=(ai,o)=>!!(ai.noGo&&ai.noGo.get(o.x+','+o.y)>G.time);
+function lootProgress(ai,d){const k=ai.gx+','+ai.gy;if(ai.gKey!==k||d<ai.gBest-20){ai.gKey=k;ai.gBest=d;ai.gT=G.time;return false;}
+  if(G.time-ai.gT>5){(ai.noGo||(ai.noGo=new Map())).set(k,G.time+30);ai.gx=null;ai.gKey=null;ai.mode='wander';return true;}return false;}
 function decide(c){const ai=c.ai,D=G.diff;stuckCheck(c,0.25);
   let best=null,bd=D.vision;
   for(const o of G.chars){if(!isEnemy(c,o)||(o.state!=='alive'&&o.state!=='dbno')||o.invuln>0)continue;const d=dist(c,o);if(d<bd&&(d<150||los(c,o))){best=o;bd=d;}}
@@ -2595,15 +2631,15 @@ function decide(c){const ai=c.ai,D=G.diff;stuckCheck(c,0.25);
   else if(ai.target)ai.mode='fight';
   else if(G.crate&&!G.crate.taken&&G.crate.z<G.crate.gz+350&&Math.hypot(c.x-G.crate.x,c.y-G.crate.y)<1300){ai.mode='crate';ai.gx=G.crate.x;ai.gy=G.crate.y;}
   else{let tg=null,td=800;
-    for(const it of G.items){if(it.delay>0)continue;const d=Math.hypot(it.x-c.x,it.y-c.y);if(d<td&&it.id!=='laser'&&wants(c,it.id)){tg=it;td=d;}}
-    for(const ch of G.chests){if(ch.open)continue;const d=Math.hypot(ch.x-c.x,ch.y-c.y);if(d<td){tg=ch;td=d;}}
+    for(const it of G.items){if(it.delay>0)continue;const d=Math.hypot(it.x-c.x,it.y-c.y);if(d<td&&it.id!=='laser'&&wants(c,it.id,it.r)&&!gaveUp(ai,it)&&!below(c,it)){tg=it;td=d;}}
+    for(const ch of G.chests){if(ch.open||gaveUp(ai,ch)||below(c,ch))continue;const d=Math.hypot(ch.x-c.x,ch.y-c.y);if(d<td){tg=ch;td=d;}}
     if(tg){ai.mode='loot';ai.gx=tg.x;ai.gy=tg.y;}
     else if(ai.mode!=='wander'||ai.gx==null){ai.mode='wander';let s;if(G.mode==='team'){const eb=BASES[c.team==='red'?'blue':'red'];s=freeSpot(lerp(WORLD/2,eb.x,Math.random()*0.7),lerp(WORLD/2,eb.y,Math.random()*0.7),400,0,null);}
       else s=freeSpot(sc.x,sc.y,sc.r*0.7,0,null);ai.gx=s.x;ai.gy=s.y;}}
   let bi=0,bs=-1;const d=ai.target?dist(c,ai.target):300;for(let i=0;i<5;i++){const s=c.slots[i];if(!s)continue;const sc2=wScore(s.id,d);if(sc2>bs){bs=sc2;bi=i;}}if(!(c.slots[c.cur]&&c.slots[c.cur].id==='foambat'))c.cur=bi;if(XM[G.mode]&&XM[G.mode].bot)XM[G.mode].bot(c);
   if(isMate(c)&&!ai.target&&ai.mode!=='storm'&&G.player.state==='alive'&&dist(c,G.player)>240){ai.mode='obj';ai.gx=G.player.x+(c.offX||0);ai.gy=G.player.y+(c.offY||0);}}
 function steer(c,mx,my){if(!mx&&!my)return[0,0];
-  const inHurt=hurtAt(c.x,c.y),bl=(x,y)=>pointBlocked(x,y,12)||(!inHurt&&(hurtAt(x,y)||hurtAt((x+c.x)/2,(y+c.y)/2)));
+  const inHurt=hurtAt(c.x,c.y),high=c.z>30,bl=(x,y)=>(high?!!blocked3D(x,y,c.z+20):pointBlocked(x,y,12))||(!inHurt&&(hurtAt(x,y)||hurtAt((x+c.x)/2,(y+c.y)/2))); // up on a roof: what is in the way at that height (walking off the edge is fine)
   if(!bl(c.x+mx*30,c.y+my*30))return[mx,my];const base=Math.atan2(my,mx),t=c.ai.turn;
   for(const o of[0.6,1.2,1.8,2.4,3.0]){for(const s of[t,-t]){const a=base+o*s,ux=Math.cos(a),uy=Math.sin(a);if(!bl(c.x+ux*30,c.y+uy*30)){c.ai.turn=s;return[ux,uy];}}}return[0,0];}
 const desiredRange=id=>({laser:420,shotgun:140,chicken:300,grenade:250,ultra:420,sniper:520,rocket:380,minigun:240,freeze:280,bubble:240,burst:300})[id]||260;
@@ -2618,8 +2654,8 @@ function botUpdate(c,dt){
   else if(ai.mode==='fight'&&tgt){const w=WEAPONS[c.slots[c.cur].id],dx=tgt.x-c.x,dy=tgt.y-c.y,d=Math.hypot(dx,dy)||1,ux=dx/d,uy=dy/d;
     const dd=w.kind==='melee'||w.kind==='trap'?0:desiredRange(c.slots[c.cur].id);if(d>dd+30){mx=ux;my=uy;}else if(dd>0&&d<dd-50){mx=-ux;my=-uy;}
     if(dd>0){const s=Math.sin(G.time*1.4+ai.seed)*0.8;mx+=-uy*s;my+=ux*s;}}
-  else if(ai.gx!=null){const dx=ai.gx-c.x,dy=ai.gy-c.y,d=Math.hypot(dx,dy);if(d>18){mx=dx/d;my=dy/d;}else if(ai.mode!=='storm')ai.gx=null;}
-  const l=Math.hypot(mx,my);if(l){mx/=l;my/=l;}[mx,my]=steer(c,mx,my);ai.wantMove=!!(mx||my);
+  else if(ai.gx!=null){const dx=ai.gx-c.x,dy=ai.gy-c.y,d=Math.hypot(dx,dy);if(ai.mode==='loot'&&lootProgress(ai,d))mx=my=0;else if(d>18){mx=dx/d;my=dy/d;}else if(ai.mode!=='storm')ai.gx=null;}
+  const l=Math.hypot(mx,my);if(l){mx/=l;my/=l;}ai.wantMove=!!(mx||my);[mx,my]=steer(c,mx,my); // (boxed in still counts as wanting to move, so stuckCheck gets it out)
   if(tgt){c.face=Math.atan2(tgt.y-c.y,tgt.x-c.x);ai.reactT-=dt;const d=dist(c,tgt),s=c.slots[c.cur],w=WEAPONS[s.id];
     if(ai.reactT<=0&&c.cd<=0&&inRange(w,d)&&Math.abs(tgt.z-c.z)<(w.kind==='melee'?44:400)){fire(c,botAim(c,tgt));ai.aimErr=(Math.random()*2-1)*G.diff.aimErr;ai.aimErr2=(Math.random()*2-1)*G.diff.aimErr;}}
   if(!tgt&&ai.unstuckT<=0&&ai.mode!=='storm'){const hi=c.slots.findIndex((s,i)=>i>0&&s&&WEAPONS[s.id].kind==='heal'&&needsItem(c,WEAPONS[s.id])&&(WEAPONS[s.id].hp?c.hp<70:true));
@@ -3201,10 +3237,11 @@ XM.show={name:"Mr. Bonk's Challenge Show",
       if(S.order.length>=Math.min(3,all.length)||S.done.size===all.length||left<=0)this.endRound(null);}
     else if(R.id==='hide'){
       if(S.hideUntil&&G.time>=S.hideUntil){S.hideUntil=0;S.hold.clear();showSay('Ready or not!','Here come the seekers!',2.2);}
-      for(const c of all){if(Math.hypot(c.x-S.cx,c.y-S.cy)>SHOW_AREA){const a=Math.atan2(c.y-S.cy,c.x-S.cx),s=freeSpot(S.cx+Math.cos(a)*(SHOW_AREA-120),S.cy+Math.sin(a)*(SHOW_AREA-120),80,0,null);
-        showTp(c,s.x,s.y);if(c.isPlayer||c.remote)tellOrAnnounce(c,'Too far!','Stay inside the hiding area.',1.6);}}
+      // the edge is a wall (wall() below); a joiner far past it (lag, a bounce pad) is brought back in
+      for(const c of all){if(c.remote&&Math.hypot(c.x-S.cx,c.y-S.cy)>SHOW_AREA+150){const a=Math.atan2(c.y-S.cy,c.x-S.cx),s=freeSpot(S.cx+Math.cos(a)*(SHOW_AREA-120),S.cy+Math.sin(a)*(SHOW_AREA-120),80,0,null);
+        showTp(c,s.x,s.y);}}
       if(!S.hideUntil)for(const s of S.seek)for(const c of all){if(S.seek.has(c)||S.out.has(c)||c.state!=='alive')continue;
-        if(Math.hypot(c.x-s.x,c.y-s.y)<34&&Math.abs(c.z-s.z)<45){S.out.add(c);s.showTags=(s.showTags||0)+1;feed(nameTag(c)+' was found by '+nameTag(s)+'!');sfx('pop',c);
+        if(Math.hypot(c.x-s.x,c.y-s.y)<34&&Math.abs(c.z-s.z)<45){S.out.add(c);s.showTags=(s.showTags||0)+1;feed(nameTag(c)+(c.isPlayer?' were':' was')+' found by '+nameTag(s)+'!');sfx('pop',c);
           tellOrAnnounce(c,'👀 Found you!','You are out. Wait in the middle and watch!',2.4);showTp(c,S.cx,S.cy);S.hold.add(c);}}
       const hiders=all.filter(c=>!S.seek.has(c)&&!S.out.has(c));if(!hiders.length||left<=0)this.endRound(hiders);}
     else if(R.id==='buttons'){
@@ -3231,14 +3268,25 @@ XM.show={name:"Mr. Bonk's Challenge Show",
     if(R.id==='circle'){for(const c of winners)give(c,10);const rest=S.order.slice().reverse();give(rest[0],6);give(rest[1],3);
       for(const c of winners){if(c===G.player){PROG.tickets+=SHOW_BRAWL_TK;saveProg();}else if(c.remote)netTell(c,'tk',SHOW_BRAWL_TK);
         if(c.isPlayer||c.remote)tellOrAnnounce(c,'🏏 You stayed in!','+'+SHOW_BRAWL_TK+' tickets!',2.6);}
-      msg=winners.length===1?nameTag(winners[0])+' is the last one in the circle!':winners.length+' players stayed in to the end! +'+SHOW_BRAWL_TK+' tickets each';}
+      msg=winners.length===1?nameTag(winners[0])+(winners[0].isPlayer?' are':' is')+' the last one in the circle!':winners.length+' players stayed in to the end! +'+SHOW_BRAWL_TK+' tickets each';}
     else if(R.id==='light'||R.id==='course'){[10,6,3].forEach((n,k)=>give(S.order[k],n));msg=S.order.length?nameTag(S.order[0])+' crossed first!':'Nobody made it in time!';}
     else if(R.id==='hide'){for(const c of winners)give(c,10);for(const c of showers())give(c,3*(c.showTags||0));
       msg=winners.length?winners.length+' hider'+(winners.length>1?'s':'')+' never got found!':'The seekers found everyone!';}
     else if(R.id==='buttons'){give(S.order[0],15);msg=S.order.length?nameTag(S.order[0])+' pressed the winning button!':'Nobody found the winning button!';}
     S.ph='done';S.t=G.time+5;S.hold=new Set(showers());S.seek.clear();
     showSay('Round '+(S.i+1)+' over!',msg.replace(/<[^>]+>/g,''),4);},
-  finish(){const list=ffaPlaces(c=>c.pts);finishFFA(list,"Mr. Bonk's Challenge Show");},
+  finish(){this.danceUp();const list=ffaPlaces(c=>c.pts);finishFFA(list,"Mr. Bonk's Challenge Show");},
+  // the show is over: everyone gathers in a dance circle in the middle of the arena (the camera circles the group, see updateCamera)
+  danceUp(){const S=G.show,all=showers().filter(c=>c.state==='alive').sort((a,b)=>(b.isPlayer?1:0)-(a.isPlayer?1:0));S.dance=true;S.hold=new Set(showers());
+    let k=0,ring=0;while(k<all.length){const r=40+ring*40,n=Math.min(all.length-k,Math.max(1,Math.floor(TAU*r/38)));
+      for(let j=0;j<n;j++,k++){const c=all[k],a=j/n*TAU+ring*0.4;if(c.vehicle)exitCar(c);c.slots[1]=null;c.cur=0;showTp(c,S.cx+Math.cos(a)*r,S.cy+Math.sin(a)*r,S.cx,S.cy);c.emote={type:k%3,t:0,loop:true};}
+      S.danceR=r;ring++;}},
+  // Hide and Seek: the edge of the hiding area is a wall. Each device keeps its own characters in (update calls this after moving)
+  wall(c){const S=G.show;if(!S||c.remote||showRound().id!=='hide'||S.ph==='done'||S.dance)return;const dx=c.x-S.cx,dy=c.y-S.cy,d=Math.hypot(dx,dy);if(d<=SHOW_AREA)return;
+    const nx=dx/d,ny=dy/d;c.x=S.cx+nx*SHOW_AREA;c.y=S.cy+ny*SHOW_AREA;for(const[vx,vy]of[['vx','vy'],['kx','ky']]){const out=c[vx]*nx+c[vy]*ny;if(out>0){c[vx]-=out*nx;c[vy]-=out*ny;}}
+    if(c.air){const out=c.air.vx*nx+c.air.vy*ny;if(out>0){c.air.vx-=out*nx;c.air.vy-=out*ny;}}},
+  // a point moved inside the hiding area, for the bots
+  inArea(x,y){const S=G.show,dx=x-S.cx,dy=y-S.cy,d=Math.hypot(dx,dy),m=SHOW_AREA*0.85;return d<=m?{x,y}:{x:S.cx+dx/d*m,y:S.cy+dy/d*m};},
   hold(c){const S=G.show;if(!S)return false;return NETC()?S.holdCids.includes(c.cid):S.hold.has(c);},
   // bots: a simple plan for each challenge
   botTick(c,dt){const S=G.show;if(!S)return null;const R=showRound(),ai=c.ai;if(S.ph!=='play'||this.hold(c))return[0,0,false];
@@ -3262,7 +3310,7 @@ XM.show={name:"Mr. Bonk's Challenge Show",
         if(best)return go(best.x,best.y,ai.skill>0.8); // only the best seekers sprint
         if(!ai.sh||ai.shT<=0||Math.hypot(c.x-ai.sh.x,c.y-ai.sh.y)<30){ai.shT=6;ai.sh=this.hideSpot();}return go(ai.sh.x,ai.sh.y,false);}
       const near=[...S.seek].find(s=>dist(s,c)<300&&!S.hideUntil&&los(s,c));
-      if(near){const dx=c.x-near.x,dy=c.y-near.y,l=Math.hypot(dx,dy)||1;ai.sh=null;return go(c.x+dx/l*200,c.y+dy/l*200,true);}
+      if(near){const dx=c.x-near.x,dy=c.y-near.y,l=Math.hypot(dx,dy)||1;ai.sh=null;const f=this.inArea(c.x+dx/l*200,c.y+dy/l*200);return go(f.x,f.y,true);} // run away, but not into the edge
       if(!ai.sh)ai.sh=this.hideSpot();c.crouch=Math.hypot(c.x-ai.sh.x,c.y-ai.sh.y)<20;return go(ai.sh.x,ai.sh.y,true);}
     if(R.id==='buttons'){let best=null,bd=1e9;for(const b of S.buttons){if(b.pressed)continue;const d=Math.hypot(b.x-c.x,b.y-c.y)*(0.7+Math.random()*0.02+(ai.skill<0.7?Math.random():0));if(d<bd){bd=d;best=b;}}
       return best?go(best.x,best.y,true):[0,0,false];}
@@ -3323,8 +3371,8 @@ XM.show={name:"Mr. Bonk's Challenge Show",
 // multiplayer: the show state for joiners (who never run update) — see XMNET in net-mode-state
 const SHOW_NET={
   s:()=>{const S=G.show,ids=set=>[...set].map(c=>c.cid);return{i:S.i,ph:S.ph,tl:r2(S.t-G.time),cx:ri(S.cx),cy:ri(S.cy),r:ri(S.r),lt:S.lt,sy:ri(S.sy||0),fy:ri(S.fy||0),
-    b:S.buttons.map(b=>[ri(b.x),ri(b.y),ri(b.z),b.pressed?(b.prize?2:1):0]),h:ids(S.hold),o:ids(S.out),sk:ids(S.seek),p:netPts()};},
-  a:s=>{const S=G.show;if(!S)return;Object.assign(S,{i:s.i,ph:s.ph,t:G.time+s.tl,cx:s.cx,cy:s.cy,r:s.r,lt:s.lt,sy:s.sy,fy:s.fy,holdCids:s.h,outCids:s.o,seekCids:s.sk});
+    b:S.buttons.map(b=>[ri(b.x),ri(b.y),ri(b.z),b.pressed?(b.prize?2:1):0]),h:ids(S.hold),o:ids(S.out),sk:ids(S.seek),p:netPts(),dn:S.dance?ri(S.danceR):0};},
+  a:s=>{const S=G.show;if(!S)return;Object.assign(S,{i:s.i,ph:s.ph,t:G.time+s.tl,cx:s.cx,cy:s.cy,r:s.r,lt:s.lt,sy:s.sy,fy:s.fy,holdCids:s.h,outCids:s.o,seekCids:s.sk,dance:!!s.dn,danceR:s.dn||0});
     S.buttons=s.b.map(a=>({x:a[0],y:a[1],z:a[2],pressed:a[3]>0,prize:a[3]===2}));netPtsApply(s.p);}};
 // @module src/js/29b-robot.js: The Mega Robot: a co-op boss mode. Everyone teams up against one giant robot that walks, fires rockets, stomps and launches rocket barrages.
 // Main: XM.robot, ROBOT_NET, robotBrain, robotFire
@@ -3388,7 +3436,7 @@ const STREAK_NAMES=['','','DOUBLE BONK!','TRIPLE BONK!','MEGA BONK!','ULTRA BONK
 function bonkStreak(c){if(!c||c.zombie)return;c.stk=G.time-(c.stkT??-99)<8?(c.stk||1)+1:1;c.stkT=G.time;c.petCheer=G.time;
   if(c.stk<2)return;const name=STREAK_NAMES[Math.min(c.stk,STREAK_NAMES.length-1)];
   if(c.isPlayer||c.remote){tellOrAnnounce(c,'💥 '+name,c.stk+' bonks in a row!',2.2);burst(c.x,c.y,c.z+50,c.stk>=3?36:18,'confetti',null,220);sfx(c.stk>=3?'victory':'pickup',c);}
-  if(c.stk>=3)feed(nameTag(c)+' is on a <b>'+name.replace('!','')+'</b> streak!');}
+  if(c.stk>=3)feed(nameTag(c)+(c.isPlayer?' are':' is')+' on a <b>'+name.replace('!','')+'</b> streak!');}
 const FW_COLS=['#ff3b3b','#ffcb1f','#5cff7a','#43c6ff','#c79bff','#ff8fc8','#ffffff'];
 function startParty(){G.party={next:0,end:G.endAt};
   for(const c of G.chars)if(c.state==='alive'&&!c.zombie&&!c.vehicle&&c.onGround)c.emote={type:Math.floor(Math.random()*3),t:0,loop:true};}
@@ -3572,7 +3620,7 @@ function animateLoot(dt,t){for(const L of G.llamas||[])if(!L.open){L.m.position.
 // See also: every gameplay module
 /* ================= physics & update ================= */
 function collide(c){
-  const r=12,ci=Math.floor(c.x/T),cj=Math.floor(c.y/T);
+  const r=12,ci=clamp(Math.floor(c.x/T),0,N-1),cj=clamp(Math.floor(c.y/T),0,N-1);
   for(let dj=-1;dj<=1;dj++)for(let di=-1;di<=1;di++){const i=ci+di,j=cj+dj;if(i<0||j<0||i>=N||j>=N)continue;
     for(const o of GRID[i+j*N]){if(c.z+CH<=o.z0)continue;
       if(o.t==='cyl'){if(c.z>=o.z0+o.h-STEP)continue;const dx=c.x-o.x,dy=c.y-o.y,rr2=o.r+r,d2=dx*dx+dy*dy;if(d2<rr2*rr2){const d=Math.sqrt(d2)||1;c.x=o.x+dx/d*rr2;c.y=o.y+dy/d*rr2;}continue;}
@@ -3581,7 +3629,7 @@ function collide(c){
       if(d2<r*r){if(d2>0.0001){const d=Math.sqrt(d2);c.x=nx+dx/d*r;c.y=ny+dy/d*r;}
         else{const l=c.x-o.x,rt=o.x+o.w-c.x,t=c.y-o.y,b=o.y+o.d-c.y,m=Math.min(l,rt,t,b);if(m===l)c.x=o.x-r;else if(m===rt)c.x=o.x+o.w+r;else if(m===t)c.y=o.y-r;else c.y=o.y+o.d+r;}}}}
   if(G&&G.cars)for(const car of G.cars){if(car.dead||car===c.vehicle)continue;if(c.z>=car.z+(car.h||24)||c.z+CH<=car.z)continue;const dx=c.x-car.x,dy=c.y-car.y,d=Math.hypot(dx,dy),R=(car.r||24)+12;if(d<R){const k=d||1;c.x=car.x+dx/k*R;c.y=car.y+dy/k*R;}}
-  c.x=clamp(c.x,r,WORLD-r);c.y=clamp(c.y,r,WORLD-r);
+  keepIn(c,r);
 }
 function updateSky(c,dt,ix,iy){
   if(isMate(c)&&G.player.state==='sky'){c.landX=G.player.x+(c.offX||0);c.landY=G.player.y+(c.offY||0);}
@@ -3625,7 +3673,7 @@ function updateChar(c,dt){
   c.x+=c.vx*dt;c.y+=c.vy*dt;if(mx||my){c.walk+=dt*(c.zombie?9:sprint?18:14);if((!c.isPlayer||autoOn(c))&&!c.ai.target)c.face=Math.atan2(my,mx);}
   if(icy&&c.isPlayer&&Math.hypot(c.vx,c.vy)>150&&Math.random()<dt*2)addText(c.x,c.y,c.z+48,'WHEEE!','#7fc8ef',12);
   c.x+=c.kx*dt;c.y+=c.ky*dt;const dmp=Math.exp(-(icy?2:7)*dt);c.kx*=dmp;c.ky*=dmp;
-  const ox=c.x,oy=c.y;collide(c);if(Math.abs(c.x-ox)>0.5||Math.abs(c.y-oy)>0.5){if(icy){c.vx*=0.5;c.vy*=0.5;}if(c.air){c.air.vx*=0.3;c.air.vy*=0.3;}}
+  const ox=c.x,oy=c.y;collide(c);if(XM[G.mode]&&XM[G.mode].wall)XM[G.mode].wall(c);if(Math.abs(c.x-ox)>0.5||Math.abs(c.y-oy)>0.5){if(icy){c.vx*=0.5;c.vy*=0.5;}if(c.air){c.air.vx*=0.3;c.air.vy*=0.3;}}
   if(c.isPlayer&&!c.onGround&&(mx||my)&&c.vz>-380){const px=c.x+mx*22,py=c.y+my*22;for(const o of cellOf(px,py)){if(!inFoot(o,px,py,2)||o.h>=200)continue;const top=surfAt(o,px,py);
     if(top-c.z>STEP&&top-c.z<80&&!blocked3D(px,py,top+12)&&!blocked3D(px,py,top+40)){c.x=px;c.y=py;c.z=top;c.vz=0;c.onGround=true;c.air=null;c.mantleT=0.35;sfx('jump',c);burst(c.x,c.y,c.z+2,6,'puff','#ffffff',50);break;}}}
   if(c.mantleT>0)c.mantleT-=dt;
@@ -3827,6 +3875,8 @@ function animateWorld(dt,t,focus){
 }
 function updateCamera(dt){
   autoAimOnLand(dt);
+  if(G.show&&G.show.dance){const S=G.show,R=S.danceR||40,a=G.time*0.35,d=R*1.4+120,gz=groundAt(S.cx,S.cy,10);if(camera.fov!==70){camera.fov=70;camera.updateProjectionMatrix();}$('scope').hidden=true;
+    camera.position.set(S.cx+Math.cos(a)*d,gz+R*0.7+75,S.cy+Math.sin(a)*d);camPos.copy(camera.position);camera.lookAt(S.cx,gz+25,S.cy);return;} // the end-of-show dance: the whole group in view
   if(G.victory&&G.player.state==='alive'){const p=G.player,a=G.time*0.5;if(camera.fov!==70){camera.fov=70;camera.updateProjectionMatrix();}$('scope').hidden=true;
     camera.position.set(p.x+Math.cos(a)*105,p.z+50,p.y+Math.sin(a)*105);camPos.copy(camera.position);camera.lookAt(p.x,p.z+30,p.y);return;}
   const p=specFollow()||G.player;let fx=p.x,fy=p.y,fz=p.z+42,dist0=125,sh=26;if(p.vehicle){const mk=p.vehicle.kind==='mech',s=p.vehicle.boss?BOSS.scale:1;dist0=mk?250*s:215;sh=mk?34*s:0;fz=p.z+(mk?118*s:64);}
