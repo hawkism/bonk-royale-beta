@@ -684,7 +684,7 @@ body.tediting .tb.ghost{opacity:.3}body.tediting #lobbyBar{display:none!importan
 // Release track of this copy: "stable" (main), "beta" or "alpha" (newest features). Set when a copy is published.
 const BONK_TRACK="beta";
 // Version: 0.1 is the first numbered release; every push to GitHub after that adds 0.1. "-dev" = not released yet.
-const BONK_VERSION="0.4";
+const BONK_VERSION="0.4.2";
 // Relay (TURN) for the website's direct links, from the owner's Metered.ca account (free plan, no card on file).
 // Only used when two devices cannot link directly (cellular data, strict school/office networks). These details are
 // public inside the website; the worst case of misuse is running out of the free monthly allowance, never a bill.
@@ -3962,7 +3962,7 @@ XM.race={name:'Car Race',laps:3,
     {const nx=P[(car.wp+1)%n];if(!P[car.wp].gate&&Math.hypot(nx.x-car.x,nx.y-car.y)<260&&segClearCar(car,nx))car.wp=(car.wp+1)%n;}
     if(car.detour&&car.detour.length&&Math.hypot(car.detour[0].x-car.x,car.detour[0].y-car.y)<60)car.detour.shift();
     let cp=car.detour&&car.detour.length?car.detour[0]:P[car.wp];
-    car.pT=(car.pT||0)+dt;if(car.pT>2.5){const dn=Math.hypot(cp.x-car.x,cp.y-car.y);if(car.pD!==undefined&&dn>car.pD-40){const r=navPath(G.nav,{x:car.x,y:car.y},G.cps[car.next]);if(r){car.detour=r;cp=r[0];}else{this.reset(car);return{thr:0,str:0};}}car.pD=dn;car.pT=0;}
+    car.pT=(car.pT||0)+dt;if(car.pT>2.5){const dn=Math.hypot(cp.x-car.x,cp.y-car.y);if(car.pD!==undefined&&dn>car.pD-40){car.np=(car.np||0)+1;const r=car.np<3&&navPath(G.nav,{x:car.x,y:car.y},G.cps[car.next]);if(r){car.detour=r;cp=r[0];}else{this.reset(car);car.np=0;return{thr:0,str:0};}}else car.np=0;car.pD=dn;car.pT=0;} // (no headway three checks running, even with a detour: back on the track)
     const look=75;let diff=angDiff(car.ang,Math.atan2(wdy(car.y,cp.y),wdx(cp.x-car.x))); // (the short way round: the edges loop)
     const probe=a=>{const x=car.x+Math.cos(car.ang+a)*look,y=car.y+Math.sin(car.ang+a)*look;return walkBlocked(x,y,10)||hurtAt(wpx(x),wpy(x,y));};
     if(probe(0)){const l=probe(-0.6),r=probe(0.6);diff=l&&!r?1:!l&&r?-1:(diff>=0?1:-1);}
@@ -4434,7 +4434,7 @@ XM.siege={name:'Fort Siege',
     if(S.campM)scene.remove(S.campM);S.campM=siegeCampModel(att);S.campM.position.set(a.x,groundAt(a.x,a.y,10),a.y);
     G.cars.forEach((v,k)=>{if(v.driver)exitCar(v.driver);const ang=Math.atan2(S.site.y-a.y,S.site.x-a.x),x=a.x+Math.cos(ang+Math.PI/2)*(k?110:-110),y=a.y+Math.sin(ang+Math.PI/2)*(k?110:-110);
       Object.assign(v,{x,y,z:groundAt(x,y,10),ang,speed:0,vx:0,vy:0,home:{x,y,ang}});});
-    const placed=G.cars.slice();for(const c of G.chars){if(c.vehicle)exitCar(c);if(c.state!=='alive')continue;const p=this.spot(c,placed);placed.push(p);showTp(c,p.x,p.y,S.site.x,S.site.y);c.sgBuild=null;this.loadout(c);}
+    const placed=G.cars.slice();for(const c of G.chars){if(c.vehicle)exitCar(c);if(c.state!=='alive')continue;const p=this.spot(c,placed);placed.push(p);const f=openFace({x:p.x,y:p.y},Math.atan2(S.site.y-p.y,S.site.x-p.x));showTp(c,p.x,p.y,p.x+Math.cos(f),p.y+Math.sin(f));c.sgBuild=null;this.loadout(c);}
     MODEFLAGS.siege.freeBuild=1;S.phase='build';S.end=G.time+SIEGE.build;
     const me=G.player.team===S.def;announce('Half '+h+': '+(S.def==='red'?'Red':'Blue')+' builds!',me?`Build a fort around your treasure! Building is free for ${SIEGE.build} seconds.`:`The ${S.def} team is building a fort. Get ready to attack!`,3.6);sfx('pickup');},
   // where a character starts (and comes back after a drone rescue): defenders around the fort, attackers at their camp
@@ -4610,7 +4610,7 @@ XM.rescue={name:'Rescue Squad',
     R.total=R.people.length;for(const p of R.people)p.m=rescuePerson(R.people.indexOf(p));
     for(let k=0;k<RESCUE.fires;k++)rescueAddFire();
     G.nav=navBuild(); // the driving grid the race bots use: the bot fire trucks find their way round buildings with it
-    const placed=G.cars.slice();for(const c of G.chars){const s=freeSpot(R.pad.x,R.pad.y,260,40,placed);c.x=s.x;c.y=s.y;c.z=groundAt(s.x,s.y,10);c.face=Math.atan2(WORLD/2-s.y,WORLD/2-s.x);placed.push(c);}
+    const placed=G.cars.slice();for(const c of G.chars){const s=freeSpot(R.pad.x,R.pad.y,260,40,placed);c.x=s.x;c.y=s.y;c.z=groundAt(s.x,s.y,10);c.face=openFace(c,Math.atan2(WORLD/2-s.y,WORLD/2-s.x));if(c.isPlayer)G.yaw=c.face;placed.push(c);}
     // bots take the second helicopter and two of the trucks; the rest grab Water Squirters
     const bots=G.chars.filter(c=>!c.isPlayer&&!c.human),take=[G.cars[1],G.cars[3],G.cars[4]];take.forEach((v,i)=>{const b=bots[i];if(b){b.x=v.x;b.y=v.y;enterCar(b,v);}});
     announce('🚒 Rescue Squad!','Put out the fires and fly the helicopter to save the people on the roofs!',4);sfx('horn');},
@@ -4764,8 +4764,8 @@ function gadgetTick(c,dt){if(c!==G.player||!c.gad)return;c.hookCd=Math.max(0,(c.
       if(!jet){c.wob=(c.wob||0)+(Math.random()-0.5)*dt*14;c.kx+=Math.cos(c.wob)*1100*dt;c.ky+=Math.sin(c.wob)*1100*dt;G.yaw+=Math.sin(G.time*6.3)*dt*0.9;} // rocket boots wobble you around
       if(PROG.fuel[fly]<=0)toast('⛽ Out of '+(jet?'jetpack':'rocket boots')+' fuel! Buy more in the Ticket Shop, or find fuel cans');}}
   // the grappling hook pulls you to where it caught
-  if(c.hook){const h=c.hook,dx=h.x-c.x,dy=h.y-c.y,dz=h.z-c.z,L=Math.hypot(dx,dy,dz);h.t+=dt;
-    if(L<45||h.t>2.2||c.state!=='alive'||c.vehicle){c.hook=null;c.vz=Math.max(c.vz,260);c.onGround=false;}
+  if(c.hook){const h=c.hook,dx=h.x-c.x,dy=h.y-c.y,dz=h.z-c.z,L=Math.hypot(dx,dy,dz);h.t+=dt;if(!(L>(h.best||1e9)-3))h.best=L,h.st=0;else h.st=(h.st||0)+dt; // (stuck on a door frame or a wall on the way: let go)
+    if(L<45||h.t>2.2||h.st>0.3||c.state!=='alive'||c.vehicle){c.hook=null;c.vz=Math.max(c.vz,260);c.onGround=false;}
     else{c.vx=dx/L*HOOK_SPEED;c.vy=dy/L*HOOK_SPEED;c.vz=dz/L*HOOK_SPEED+30;c.onGround=false;c.air=null;}}
   if(gadSaveT&&(gadSaveT-=dt)<=0){gadSaveT=0;saveProg();}}
 // U: speed suit, H: grappling hook (keyboard and touch); true when the key was a gadget key
