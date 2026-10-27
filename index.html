@@ -684,7 +684,7 @@ body.tediting .tb.ghost{opacity:.3}body.tediting #lobbyBar{display:none!importan
 // Release track of this copy: "stable" (main), "beta" or "alpha" (newest features). Set when a copy is published.
 const BONK_TRACK="beta";
 // Version: 0.1 is the first numbered release; every push to GitHub after that adds 0.1. "-dev" = not released yet.
-const BONK_VERSION="0.4.3";
+const BONK_VERSION="0.4.4";
 // Relay (TURN) for the website's direct links, from the owner's Metered.ca account (free plan, no card on file).
 // Only used when two devices cannot link directly (cellular data, strict school/office networks). These details are
 // public inside the website; the worst case of misuse is running out of the free monthly allowance, never a bill.
@@ -1154,8 +1154,8 @@ const FURN={
     P('box',IC.red,0,30,30,14,3,6);return{W:40,D:36,H:0,parts};},
   patientBed(r){const{parts,P}=IP(r);P('box',IC.light,0,48,10,56,94,8);for(const u of[-25,25])for(const v of[4,92])P('box',IC.grey,u,v,0,4,4,12);P('box',IC.white,0,50,18,52,88,6);P('box',IC.white,0,16,24,36,22,15);
     P('box',IC.light,0,3,10,56,4,32);P('box',IC.sky,0,87,24,52,14,4);P('cyl',IC.grey,36,8,0,3,3,58);P('box','#9fe0ff',36,8,48,9,4,13);P('box',IC.red,0,95.5,12,10,1,3);return{W:56,D:96,H:24,parts};}, // the patient's bed (the sheet goes on when you are in it)
-  hospBed(r){const{parts,P,pick}=IP(r);P('box',IC.light,0,48,10,54,94,8);for(const u of[-24,24])for(const v of[4,92])P('box',IC.grey,u,v,0,4,4,12);P('box',IC.white,0,50,18,50,86,6);P('box',IC.sky,0,64,23,52,60,3);
-    P('box',IC.white,0,14,24,32,14,6);P('box',IC.light,0,3,10,54,4,30);P('sph',pick([IC.brown,IC.yellow,IC.pink]),14,22,26,12,10,12);P('sph',IC.brown,14,22,36,9,9,9);
+  hospBed(r){const{parts,P,pick}=IP(r);P('box',IC.light,0,48,10,54,94,8);for(const u of[-24,24])for(const v of[4,92])P('box',IC.grey,u,v,0,4,4,12);P('box',IC.white,0,50,18,50,86,6);const bc=pick([IC.sky,'#ffd6e8','#d6f5d6']);P('box',bc,0,36.5,24,48,17,25);P('box',bc,0,52.5,24,48,15,20);P('box',bc,0,77,24,48,34,11);P('box',IC.white,0,27.5,24,49,5,26);for(const s of[-1,1])P('sph',bc,s*6,53,40,8,7,7);
+    P('box',IC.white,0,14,24,32,14,6);P('box',IC.light,0,3,10,54,4,30);P('pat',null,0,51,33,0,0,0,{pat:1}); // a patient (a real character, made in buildInteriors) under a raised blanket
     P('cyl',IC.grey,-34,8,0,3,3,56);P('box','#9fe0ff',-34,8,46,8,4,12);return{W:72,D:96,H:24,parts};}, // with a teddy bear and a drip stand
   medCabinet(r){const{parts,P}=IP(r);P('box',IC.white,0,11,0,50,22,60);P('box',IC.red,0,22.5,30,22,1,6);P('box',IC.red,0,22.5,22,6,1,22);return{W:50,D:22,H:60,parts};},
   monitor(r){const{parts,P}=IP(r);P('cyl',IC.grey,0,12,0,16,16,3);P('cyl',IC.grey,0,12,3,3,3,40);P('box',IC.dark,0,12,40,28,10,20);P('box',IC.black,0,17.5,43,24,1,14);P('box',IC.green,0,18,49,20,1,1.5,{e:1});P('sph',IC.red,8,18,44,4,1,4,{e:1});return{W:30,D:20,H:0,parts};},
@@ -1221,7 +1221,7 @@ const MAP_FLAVOUR={space:['console','spaceHelmet','rocketModel','alienPlush'],ic
   desert:['cactusPot','vase'],cave:['lantern','crystals','lantern'],lava:['crystals','lantern'],oil:['oilDrums','barrels'],pirate:['barrels','hammock'],meadow:['plant','duck'],city:['plant','tv']};
 // ---- placing: against the walls, never in front of a door, on the stairs or on a chest
 function furnishAll(){
-  for(const e of PROPS){for(const m of[e.mesh,e.glow])if(m){m.geometry.dispose();if(m.parent)m.parent.remove(m);}}PROPS.length=0;
+  for(const e of PROPS){for(const m of[e.mesh,e.glow,e.extra])if(m){if(m.geometry)m.geometry.dispose();if(m.parent)m.parent.remove(m);}}PROPS.length=0;
   BUILDINGS.forEach((b,i)=>furnish(b,i));
   if(HOSP_ISLE.b)furnish(Object.assign({},HOSP_ISLE.b,{doors:{bottom:true},big:false,hosp:true}),999);}
 function furnish(b,idx){
@@ -1235,9 +1235,9 @@ function furnish(b,idx){
   for(const c of CHEST_SPOTS)if(c.x>b.x&&c.x<b.x+b.w&&c.y>b.y&&c.y<b.y+b.h)keep.push([c.x-30,c.y-30,c.x+30,c.y+30]);
   const hit=(a,q,m)=>a[0]<q[2]+m&&a[2]>q[0]-m&&a[1]<q[3]+m&&a[3]>q[1]-m;
   const SIDES=[{x:X0,y:Y0,tx:1,ty:0,nx:0,ny:1,len:X1-X0,d:'top'},{x:X1,y:Y1,tx:-1,ty:0,nx:0,ny:-1,len:X1-X0,d:'bottom'},{x:X0,y:Y1,tx:0,ty:-1,nx:1,ny:0,len:Y1-Y0,d:'left'},{x:X1,y:Y0,tx:0,ty:1,nx:-1,ny:0,len:Y1-Y0,d:'right'}];
-  const parts=[],placed=[],tall=[],names=[];
+  const parts=[],placed=[],tall=[],names=[],pats=[];
   const put=(f,s,uc,v0)=>{const ry=Math.atan2(-s.ty,s.tx),ax=s.x+s.tx*uc+s.nx*v0,ay=s.y+s.ty*uc+s.ny*v0;
-    for(const p of f.parts){const wx=ax+s.tx*p.u+s.nx*p.v,wy=ay+s.ty*p.u+s.ny*p.v;parts.push({g:p.g,c:p.c,e:p.e,x:wx,y:wy,z:p.z,w:p.w,d:p.d,h:p.h,rx:p.rx||0,ry:ry+(p.ry||0),rz:p.rz||0});}};
+    for(const p of f.parts){const wx=ax+s.tx*p.u+s.nx*p.v,wy=ay+s.ty*p.u+s.ny*p.v;if(p.pat){pats.push({x:wx,y:wy,z:p.z,ry:Math.atan2(s.nx,s.ny)});continue;}parts.push({g:p.g,c:p.c,e:p.e,x:wx,y:wy,z:p.z,w:p.w,d:p.d,h:p.h,rx:p.rx||0,ry:ry+(p.ry||0),rz:p.rz||0});}};
   // try to stand one piece against a wall; true when it found a spot
   const place=name=>{const f=FURN[name](r),spots=[];
     for(const s of SIDES){if(s.len<f.W+2)continue;for(let uc=f.W/2+1;uc<=s.len-f.W/2-1;uc+=6){
@@ -1265,7 +1265,7 @@ function furnish(b,idx){
       const door=(s.d==='top'&&D.top||s.d==='bottom'&&D.bottom)?[dx0-6,s.y-50,dx0+86,s.y+50]:(s.d==='left'&&D.left||s.d==='right'&&D.right)?[s.x-50,dy0-6,s.x+50,dy0+86]:null;
       if(door&&hit(box,door,0))continue;if(tall.some(q=>hit(box,q,2)))continue;if(b.stairs&&hit(box,[b.x,b.y,b.x+190,b.y+130],0))continue;
       tall.push(box);for(const p of f.parts){const z=Math.min(p.z,wallH-24);put({parts:[Object.assign({},p,{z})]},s,uc,0);}break;}}
-  PROPS.push({name:b.name||'',cx:(b.x+b.w/2),cy:(b.y+b.h/2),r:Math.hypot(b.w,b.h)/2,names,parts,mesh:null,glow:null});}
+  PROPS.push({name:b.name||'',cx:(b.x+b.w/2),cy:(b.y+b.h/2),r:Math.hypot(b.w,b.h)/2,names,parts,pats,mesh:null,glow:null});}
 // ---- 3D: each building's furniture as one merged mesh (and one for glowing bits), with the colour in the vertices
 let IGEO=null,IMAT=null,IGLOW=null;
 function buildInteriors(){
@@ -1274,7 +1274,13 @@ function buildInteriors(){
     IMAT=new THREE.MeshLambertMaterial({vertexColors:true});IGLOW=new THREE.MeshBasicMaterial({vertexColors:true});}
   for(const e of PROPS){const lit=e.parts.filter(p=>!p.e),glow=e.parts.filter(p=>p.e);
     if(lit.length){e.mesh=new THREE.Mesh(interiorMerge(lit),IMAT);e.mesh.receiveShadow=true;world.add(e.mesh);}
-    if(glow.length){e.glow=new THREE.Mesh(interiorMerge(glow),IGLOW);world.add(e.glow);}}}
+    if(glow.length){e.glow=new THREE.Mesh(interiorMerge(glow),IGLOW);world.add(e.glow);}
+    if(e.pats&&e.pats.length){e.extra=new THREE.Group();for(const q of e.pats)e.extra.add(bedPatient(q));world.add(e.extra);}}}
+// a patient lying in a hospital bed, propped up on the pillow, tucked in up to the shoulders: a real character like everyone else
+function bedPatient(q){const g=new THREE.Group(),body=new THREE.Group();g.rotation.order='YXZ';body.position.y=10;g.add(body);
+  const add=(pa,geo,col,px,py,pz,sx,sy,sz)=>{const m=new THREE.Mesh(GEO[geo],mat(col));m.position.set(px,py,pz);m.scale.set(sx,sy,sz);pa.add(m);return m;};
+  const look=makeLook(false,pick(TORSO),null),P=buildPerson({look},body,add);P.armL.rotation.set(0,0,0);P.armR.rotation.set(0,0,0);
+  g.position.set(q.x,q.z,q.y);g.rotation.set(-Math.PI/2+0.35,q.ry,0);return g;}
 function interiorMerge(parts){let nv=0,ni=0;for(const p of parts){const g=IGEO[p.g];nv+=g.attributes.position.count;ni+=g.index?g.index.count:g.attributes.position.count;}
   const pos=new Float32Array(nv*3),nor=new Float32Array(nv*3),col=new Float32Array(nv*3),idx=new Uint32Array(ni),m=new THREE.Matrix4(),nm=new THREE.Matrix3(),q=new THREE.Quaternion(),e=new THREE.Euler(),
     at=new THREE.Vector3(),sc=new THREE.Vector3(),v=new THREE.Vector3(),c=new THREE.Color();let vo=0,io=0;
@@ -1284,7 +1290,7 @@ function interiorMerge(parts){let nv=0,ni=0;for(const p of parts){const g=IGEO[p
   const bg=new THREE.BufferGeometry();bg.setAttribute('position',new THREE.BufferAttribute(pos,3));bg.setAttribute('normal',new THREE.BufferAttribute(nor,3));bg.setAttribute('color',new THREE.BufferAttribute(col,3));
   bg.setIndex(new THREE.BufferAttribute(idx,1));bg.computeBoundingSphere();return bg;}
 // every frame: only the rooms near the camera are drawn (the rest are hidden by walls or far away anyway)
-function interiorsTick(){const cx=camera.position.x,cy=camera.position.z;for(const e of PROPS){const on=Math.hypot(e.cx-cx,e.cy-cy)<e.r+1100;if(e.mesh)e.mesh.visible=on;if(e.glow)e.glow.visible=on;}}
+function interiorsTick(){const cx=camera.position.x,cy=camera.position.z;for(const e of PROPS){const on=Math.hypot(e.cx-cx,e.cy-cy)<e.r+1100;if(e.mesh)e.mesh.visible=on;if(e.glow)e.glow.visible=on;if(e.extra)e.extra.visible=on;}}
 // @module src/js/06c-wrap.js: World wrap: every map edge loops for people, vehicles and projectiles (not the hospital island and its bridge); the short way round for distances and directions; drawing things just across an edge beside you; the see-through edge curtain.
 // Main: WRAP, wdx, wdy, wrapPos, wrapProj, walkBlocked, wrapView, wrapEdges, isleZone
 // See also: maps (keepIn), update (projectiles), cars (carCollide, exitCar, PLANE_WRAP, pvec), bots, autopilot, combat, aiming, visuals, net-sync
@@ -1386,7 +1392,7 @@ function isleSteer(c,gx,gy){const ai=c.ai;if(Math.hypot(gx-c.x,gy-c.y)<200)retur
    where they are. Press E (or the action button) by a ride to get on; E or JUMP to get off (from up high you just drop).
    Bumper cars are little vehicles (kind 'bumper') in a fenced arena. Ride positions are in design units (times K). */
 const RIDES=[];
-const PARK={coaster:[620,640],wheel:[1760,620],slide:[1600,1420],pool:[1880,1880],bump:[640,1760]};
+const PARK_ROOF=200,PARK={coaster:[620,640],wheel:[1760,620],slide:[1600,1420],pool:[1880,1880],bump:[640,1760]};
 // the plazas the rides stand on are paved (tile 1), so no tree or extra building lands on them
 function parkZone(x,y){const[px,py]=PARK.pool;if(((x-px)/260)**2+((y-py)/170)**2<1)return 2;
   if(Math.abs(x-PARK.coaster[0])<330&&Math.abs(y-PARK.coaster[1])<250)return 1;if(Math.hypot(x-PARK.wheel[0],y-PARK.wheel[1])<190)return 1;
@@ -1415,7 +1421,7 @@ function rideCoaster(){const[cx,cy]=PARK.coaster,n=180,P=[];
     build(){for(let i=0;i<n;i++){const a=P[i],b=P[(i+1)%n],dx=b.x-a.x,dy=b.y-a.y,h=Math.hypot(dx,dy),ang=Math.atan2(dy,dx),pt=Math.atan2(b.z-a.z,h),mx=(a.x+b.x)/2,my=(a.y+b.y)/2,mz=(a.z+b.z)/2;
         for(const s of[-9,9])S('boxC','#ff3b3b',mx-Math.sin(ang)*s,my+Math.cos(ang)*s,mz,Math.hypot(h,b.z-a.z)+1,3,3,{ry:-ang,rz:pt});S('boxC','#c5ccd6',mx,my,mz-3,Math.hypot(h,b.z-a.z)+1,2,20,{ry:-ang,rz:pt});
         if(i%6===0&&a.z>34){S('cyl','#ffcb1f',a.x,a.y,0,6,a.z-3,6);if(!blocked3D(a.x,a.y,10))addOb({t:'cyl',x:a.x,y:a.y,r:5,z0:0,h:a.z-6});}}
-      S('box','#9b6bff',st.x-50,st.y-90,0,120,26,60);S('box','#ffcb1f',st.x-50,st.y-90,26,120,4,62,{em:0.2});
+      S('box','#9b6bff',st.x+10,st.y-60,0,120,26,60);S('box','#ffcb1f',st.x+10,st.y-60,26,120,4,62,{em:0.2}); // (S boxes are placed by their middle: the platform round the boarding spot)
       const g=new THREE.Group();R.cars=[];for(let k=0;k<3;k++){const c=new THREE.Group(),B=(col,x,y,z,w,h,d)=>{const m=new THREE.Mesh(GEO.boxC,mat(col));m.position.set(x,y,z);m.scale.set(w,h,d);c.add(m);};
         B(['#ff3b3b','#43c6ff','#ffcb1f'][k],0,6,0,26,12,36);B('#2b2f3a',0,13,-4,22,3,8);B('#2b2f3a',0,13,10,22,3,8);B('#c5ccd6',0,2,0,30,3,40);g.add(c);R.cars.push(c);}world.add(g);},
     tick(t){if(!R.cars)return;R.cars.forEach((c,k)=>{const p=at(sAt(t)-k*44);c.position.set(p.x,p.z,p.y);c.rotation.set(0,Math.PI/2-p.ang,0,'YXZ');c.rotateX(-p.pitch);});}};
@@ -1442,7 +1448,8 @@ function rideSlide(){const[sx,sy]=PARK.slide,[px,py]=PARK.pool,top=170,n=60,P=[]
   const R={kind:'slide',name:'WATER SLIDE',x:x0+40,y:y0+40,z:top,seats:99,oneway:true,dur,
     seat:(k,t,c)=>{const p=at((t-c.rideT0)/dur);return{x:p.x,y:p.y,z:p.z+2,ang:p.ang,pitch:0};},ready:()=>true,
     build(){addOb({t:'box',x:x0-40,y:y0-40,w:120,d:120,z0:0,h:top,col:'#43c6ff',wall:true});addOb({t:'ramp',x:x0-40,y:y0-40-380,w:120,d:380,z0:0,h:top,dir:1,stairs:true});
-      S('box','#ffffff',x0-40,y0-40-380,0,120,4,380,{em:0.05});for(let i=0;i<n;i++){const a=P[i],b=P[i+1],dx=b.x-a.x,dy=b.y-a.y,h=Math.hypot(dx,dy),ang=Math.atan2(dy,dx),pt=Math.atan2(b.z-a.z,h),mx=(a.x+b.x)/2,my=(a.y+b.y)/2,mz=(a.z+b.z)/2;
+      S('box','#ffffff',x0+20,y0-40-190,0,120,4,380,{em:0.05}); // (by its middle: under the stairs)
+      for(let i=0;i<n;i++){const a=P[i],b=P[i+1],dx=b.x-a.x,dy=b.y-a.y,h=Math.hypot(dx,dy),ang=Math.atan2(dy,dx),pt=Math.atan2(b.z-a.z,h),mx=(a.x+b.x)/2,my=(a.y+b.y)/2,mz=(a.z+b.z)/2;
         S('boxC','#43c6ff',mx,my,mz,Math.hypot(h,b.z-a.z)+2,4,46,{ry:-ang,rz:pt});for(const s of[-22,22])S('boxC','#ffcb1f',mx-Math.sin(ang)*s,my+Math.cos(ang)*s,mz+8,Math.hypot(h,b.z-a.z)+2,16,4,{ry:-ang,rz:pt});
         if(i%8===4&&a.z>20)S('cyl','#ffffff',a.x,a.y,0,8,a.z-4,8);}},
     tick(){}};
@@ -1450,11 +1457,19 @@ function rideSlide(){const[sx,sy]=PARK.slide,[px,py]=PARK.pool,top=170,n=60,P=[]
 // ---- the bumper car arena: a low fence round a smooth floor
 function parkArena(){const[bx,by]=PARK.bump,x0=(bx-200)*K,y0=(by-140)*K,w=400*K,d=280*K;const F=(x,y,w2,d2)=>addOb({t:'box',x,y,w:w2,d:d2,z0:0,h:26,col:'#ff6fae',wall:true});
   F(x0,y0,w,10);F(x0,y0+d-10,w,10);F(x0,y0,10,d/2-60);F(x0,y0+d/2+60,10,d/2-60);F(x0+w-10,y0,10,d);}
-function parkArenaBuild(){const[bx,by]=PARK.bump,x0=(bx-200)*K,y0=(by-140)*K,w=400*K,d=280*K;S('box','#8a93a3',x0,y0,0,w,1.5,d);
-  for(let x=x0;x<=x0+w;x+=w/6)for(const y of[y0,y0+d])S('cyl','#c5ccd6',x,y,0,5,120,5);S('box','#9b6bff',x0,y0,120,w,4,d);}
+// the floor, posts all round (none in the doorway), a roof frame on top of them and a see-through net ceiling the cars' poles touch
+// (S boxes are placed by their middle; the camera can see through the net from above)
+function parkArenaBuild(){const[bx,by]=PARK.bump,x0=(bx-200)*K,y0=(by-140)*K,w=400*K,d=280*K,cx=x0+w/2,cy=y0+d/2,H=PARK_ROOF;S('box','#8a93a3',cx,cy,0,w,1.5,d);
+  for(let x=x0;x<=x0+w+1;x+=w/6)for(const y of[y0+5,y0+d-5])S('cyl','#c5ccd6',x,y,0,7,H,7);
+  for(const y of[y0+5,y0+d/4,y0+3*d/4,y0+d-5])S('cyl','#c5ccd6',x0+w-5,y,0,7,H,7);for(const y of[y0+5,y0+d/4-10,y0+3*d/4+10,y0+d-5])S('cyl','#c5ccd6',x0+5,y,0,7,H,7);
+  S('box','#9b6bff',cx,y0+5,H,w+10,8,10);S('box','#9b6bff',cx,y0+d-5,H,w+10,8,10);S('box','#9b6bff',x0+5,cy,H,10,8,d);S('box','#9b6bff',x0+w-5,cy,H,10,8,d);
+  const net=new THREE.Mesh(new THREE.PlaneGeometry(w,d,16,10).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0xffcb1f,wireframe:true,transparent:true,opacity:0.55}));net.position.set(cx,H-1,cy);world.add(net);}
+// bumper cars stay in the arena (the doorway is for people): bounced back off the fence line
+function bumperKeep(car){const[bx,by]=PARK.bump,r=car.r||22,x0=(bx-200)*K+10+r,x1=(bx+200)*K-10-r,y0=(by-140)*K+10+r,y1=(by+140)*K-10-r;
+  if(car.x<x0||car.x>x1){car.x=clamp(car.x,x0,x1);car.vx*=-0.5;car.speed*=-0.3;}if(car.y<y0||car.y>y1){car.y=clamp(car.y,y0,y1);car.vy*=-0.5;car.speed*=-0.3;}}
 // the bumper car: a round little car with a bumper ring and a pole
 function bumperModel(col){const g=new THREE.Group(),B=(c,x,y,z,w,h,d,geo)=>{const m=new THREE.Mesh(GEO[geo||'boxC'],mat(c));m.position.set(x,y,z);m.scale.set(w,h,d);m.castShadow=true;g.add(m);return m;};
-  B('#2b2f3a',0,5,0,44,8,44,'cylC');B(col,0,12,0,38,10,38,'cylC');B('#ffffff',0,20,-8,22,10,8);B('#2b2f3a',0,18,10,4,8,4);B('#c5ccd6',0,60,-14,2,80,2,'cylC');B('#ffcb1f',0,100,-14,6,6,6,'sphC');
+  B('#2b2f3a',0,5,0,44,8,44,'cylC');B(col,0,12,0,38,10,38,'cylC');B('#ffffff',0,20,-8,22,10,8);B('#2b2f3a',0,18,10,4,8,4);B('#c5ccd6',0,(17+PARK_ROOF)/2,-14,2,PARK_ROOF-23,2,'cylC');B('#ffcb1f',0,PARK_ROOF-3,-14,6,6,6,'sphC'); // (the pole reaches up to the net ceiling)
   g.userData.wheels=[];scene.add(g);return g;}
 // ---- getting on and off
 function rideNear(c){for(const R of RIDES){if(R.kind==='slide'){if(Math.hypot(c.x-R.x,c.y-R.y)<70&&c.z>R.z-30)return R;continue;}if(Math.hypot(c.x-R.x,c.y-R.y)<110&&c.z<60)return R;}return null;}
@@ -2194,6 +2209,12 @@ function droneModel(){const g=new THREE.Group();g.rotation.order='YXZ';const bod
   const ring=new THREE.Mesh(GEO.ring,basic('#9ff3ff',{transparent:true,opacity:0.8,depthWrite:false}));ring.scale.setScalar(50);ring.position.y=-70;ring.visible=false;g.add(ring);
   g.scale.setScalar(1.15);g.userData={rotors,lights,tip,jet,beam,ring,body};scene.add(g);return g;}
 // the battle bus: a blue bus hanging by ropes under a big round hot-air balloon, two fans pushing it along (forward is +x)
+// the seats in the bus: five rows of three, front to back (x forward, z across)
+const BUS_SEATS=[];for(let k=4;k>=0;k--)for(const z of[-14,0,14])BUS_SEATS.push([-46+k*22,z]);
+// someone riding the bus: in their own seat, sitting down, facing the front, small enough to fit (only while on the bus)
+function busSeat(c,g,m){const b=G.bus;if(c.busSeat==null)c.busSeat=G.busN=(G.busN??-1)+1;const s=BUS_SEATS[c.busSeat];if(!s){g.visible=false;return;}
+  const a=-b.ang,ca=Math.cos(a),sa=Math.sin(a);g.position.set(b.x+s[0]*ca+s[1]*sa,b.z-102,b.y-s[0]*sa+s[1]*ca);g.rotation.set(0,Math.PI/2-b.ang,0);g.scale.setScalar(0.6);
+  m.legL.rotation.x=m.legR.rotation.x=-Math.PI/2;m.armL.rotation.x=m.armR.rotation.x=-0.4;m.armL.rotation.z=m.armR.rotation.z=0;}
 function busModel(){const g=new THREE.Group(),B=(geo,col,x,y,z,w,h,d)=>{const m=mesh(geo,col,x,y,z,w,h,d);g.add(m);return m;};
   // the balloon
   const bal=new THREE.Mesh(GEO.sphC,mat('#1f6fd6'));bal.scale.set(190,170,190);bal.position.y=80;bal.castShadow=true;g.add(bal);
@@ -2202,10 +2223,19 @@ function busModel(){const g=new THREE.Group(),B=(geo,col,x,y,z,w,h,d)=>{const m=
   // the ropes, from the bus roof up to the balloon
   for(const[x,z]of[[-48,-20],[48,-20],[-48,20],[48,20]]){const r=new THREE.Mesh(GEO.cylC,mat('#5a3a1e'));const a=new THREE.Vector3(x,-60,z),b=new THREE.Vector3(x*0.35,-6,z*0.6),L=a.distanceTo(b);
     r.scale.set(1.6,L,1.6);r.position.copy(a).add(b).multiplyScalar(0.5);r.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),b.clone().sub(a).normalize());g.add(r);}
-  // the bus: blue body, white roof, windows down both sides, windshield, bumpers, headlights, wheels
-  B('boxC','#1f6fd6',0,-84,0,132,40,46);B('boxC','#f4f6fa',0,-62,0,128,6,44);B('boxC','#1f6fd6',72,-92,0,18,24,44);B('boxC','#163f8a',0,-104,0,134,4,48);
-  for(let k=0;k<5;k++)for(const s of[-1,1])B('boxC','#bfe8ff',-48+k*22,-78,s*23.4,16,14,1);
-  B('boxC','#bfe8ff',66.6,-78,0,1,14,38);B('boxC','#c5ccd6',82,-100,0,4,6,46);B('boxC','#c5ccd6',-67,-100,0,4,6,46);
+  // the bus: a blue body you can see into (glass windows down both sides and a windshield), white roof, seats in rows, a driver
+  // up front, bumpers, headlights, wheels. Everyone riding sits in a seat (busSeat, from visuals).
+  B('boxC','#f4f6fa',0,-62,0,128,6,44);B('boxC','#1f6fd6',72,-92,0,18,24,44);B('boxC','#163f8a',0,-104,0,134,4,48);B('boxC','#8a93a3',0,-101,0,130,2,44);
+  for(const s of[-1,1]){B('boxC','#1f6fd6',0,-94,s*22,132,20,2);B('boxC','#1f6fd6',0,-68,s*22,132,8,2);B('boxC','#1f6fd6',-62,-78,s*22,8,12,2);B('boxC','#1f6fd6',55,-78,s*22,22,12,2);
+    for(let k=0;k<4;k++)B('boxC','#1f6fd6',-37+k*22,-78,s*22,6,12,2);}
+  B('boxC','#1f6fd6',-65,-84,0,2,40,46);B('boxC','#1f6fd6',65,-94,0,2,20,46);B('boxC','#1f6fd6',65,-68,0,2,8,46);
+  {const gl=new THREE.MeshLambertMaterial({color:0xbfe8ff,transparent:true,opacity:0.28,depthWrite:false}),G2=(x,z,w,d)=>{const m=new THREE.Mesh(GEO.boxC,gl);m.position.set(x,-78,z);m.scale.set(w,12,d);g.add(m);};
+    for(let k=0;k<5;k++)for(const s of[-1,1])G2(-48+k*22,s*22,16,1);G2(65,0,1,44);}
+  for(const[x,z]of BUS_SEATS){B('boxC','#e2312b',x-6,-92,z,3,14,11);B('boxC','#e2312b',x,-99,z,11,3,11);}
+  {const body=new THREE.Group();body.position.set(50,-100+10*0.6,-12);body.scale.setScalar(0.6);body.rotation.y=Math.PI/2;g.add(body);
+    const add=(pa,geo,col,px,py,pz,sx,sy,sz)=>{const m=new THREE.Mesh(GEO[geo],mat(col));m.position.set(px,py,pz);m.scale.set(sx,sy,sz);pa.add(m);return m;};
+    const D=buildPerson({look:{top:'#1f6fd6',top2:'#163f8a',pants:'#2b2f3a',shoe:'#1b2235',glove:null,hair:'#5a3a1e',hairStyle:'short',hat:'cap',hatCol:'#1f6fd6',skin:'#f1c27d'}},body,add);
+    D.legL.rotation.x=D.legR.rotation.x=-Math.PI/2;D.armL.rotation.x=D.armR.rotation.x=-1.1;body.position.y-=13*0.6;add(g,'cylC','#2b2f3a',58,-84,-12,10,2,10).rotation.z=Math.PI/2;} // the bus driver at the wheelB('boxC','#c5ccd6',82,-100,0,4,6,46);B('boxC','#c5ccd6',-67,-100,0,4,6,46);
   for(const s of[-1,1])B('sphC','#fff3a0',81.5,-92,s*16,3,6,6);
   for(const x of[-40,48])for(const s of[-1,1])B('cylC','#1b2235',x,-104,s*23,18,6,18).rotation.x=Math.PI/2;
   // two fans at the back
@@ -3304,6 +3334,7 @@ function updateCars(dt){
     if(icy&&me&&Math.abs(angDiff(car.ang,Math.atan2(car.vy,car.vx)))>0.4&&Math.hypot(car.vx,car.vy)>150&&Math.random()<dt*3)addText(car.x,car.y,car.z+50,'DRIFT!','#7fc8ef',13);}
     car.x+=car.vx*dt;car.y+=car.vy*dt;if(car.kind==='plane'&&car.fly)planeWrap(car);
     if(car.koPilot&&car.koPilot.state==='down'){const c=car.koPilot;c.x=c.koX=car.x;c.y=c.koY=car.y;c.z=car.z;} // the bonked pilot rides along, waiting for the drone
+    if(car.kind==='bumper')bumperKeep(car); // (Theme Park: bumper cars stay in their arena)
     if(carCollide(car)){const sp=Math.hypot(car.vx,car.vy);if(sp>170&&car.kind!=='mech'){sfx('bonk',car);if(me)G.shake=Math.max(G.shake,5);damageCar(car,sp*0.02,null);}car.speed*=-0.25;car.vx*=0.3;car.vy*=0.3;}
     if(car.dead)continue;
     const g=groundAt(car.x,car.y,car.z+4);
@@ -3420,6 +3451,7 @@ function animMech(car,dt){const u=car.m.userData,sp=Math.abs(car.speed||0),d=car
 function planeModel(col){const g=new THREE.Group(),B=(c,x,y,z,w,h,d,geo)=>{const m=new THREE.Mesh(GEO[geo||'boxC'],mat(c));m.position.set(x,y,z);m.scale.set(w,h,d);m.castShadow=true;g.add(m);return m;};
   B(col,0,16,0,16,15,72);B(shadeHex(col,1.15),0,16,40,12,12,10,'sphC');B('#ffffff',0,17,4,120,3,24);B(shadeHex(col,0.8),0,27,-32,3,20,14);B('#ffffff',0,18,-33,44,3,12);
   const glass=new THREE.Mesh(GEO.sphC,new THREE.MeshLambertMaterial({color:0xbfe8ff,transparent:true,opacity:0.6}));glass.position.set(0,25,8);glass.scale.set(12,10,20);g.add(glass);
+  B(shadeHex(col,0.9),0,15.5,7,29,15,30);B(col,0,7.5,7,17,3,30); // the cockpit: a little wider than the body, with a floor, so the pilot sits inside it
   for(const sx of[-1,1])B('#2b2f3a',sx*10,5,10,4,10,4,'cylC');B('#2b2f3a',0,5,-28,3,8,3,'cylC');
   const prop=new THREE.Group();prop.position.set(0,16,46);for(const r of[0,Math.PI/2]){const b=new THREE.Mesh(GEO.boxC,mat('#2b2f3a'));b.scale.set(36,3,1.5);b.rotation.z=r;prop.add(b);}g.add(prop);
   g.userData.prop=prop;
@@ -3663,7 +3695,8 @@ function obDist(o,x,y,z){const top=o.z0+o.h,dz=Math.max(0,o.z0-z,z-top);if(o.t==
 function wreckOb(o){removeOb(o);if(o.inst)for(const[im,i]of o.inst){im.setMatrixAt(i,WRECK.zero);im.instanceMatrix.needsUpdate=true;}if(o.mesh)o.mesh.visible=false;}
 // furniture near the blast is knocked out: the building's furniture mesh is rebuilt without it
 function wreckProps(x,y,z,r){let hit=false;
-  for(const e of PROPS){if(!e.parts||!e.parts.length||Math.hypot(e.cx-x,e.cy-y)>e.r+r)continue;const keep=e.parts.filter(p=>Math.hypot(p.x-x,p.y-y,p.z+p.h/2-z)>r);if(keep.length===e.parts.length)continue;
+  for(const e of PROPS){if(e.extra)for(const g of e.extra.children.slice())if(Math.hypot(g.position.x-x,g.position.z-y)<r)e.extra.remove(g); // (a patient goes with their bed)
+    if(!e.parts||!e.parts.length||Math.hypot(e.cx-x,e.cy-y)>e.r+r)continue;const keep=e.parts.filter(p=>Math.hypot(p.x-x,p.y-y,p.z+p.h/2-z)>r);if(keep.length===e.parts.length)continue;
     e.parts=keep;hit=true;for(const k of['mesh','glow'])if(e[k]){world.remove(e[k]);e[k].geometry.dispose();e[k]=null;}
     const lit=keep.filter(p=>!p.e),glow=keep.filter(p=>p.e);if(lit.length){e.mesh=new THREE.Mesh(interiorMerge(lit),IMAT);e.mesh.receiveShadow=true;world.add(e.mesh);}if(glow.length){e.glow=new THREE.Mesh(interiorMerge(glow),IGLOW);world.add(e.glow);}}
   return hit;}
@@ -5089,7 +5122,7 @@ function syncVisuals(dt){
     cm.userData.wheels.forEach((w,i)=>{w.rotation.x=car.wheelRot;w.rotation.y=i<2?-car.steer*0.5:0;});}
   for(const car of G.cars)if(!car.dead&&car.m)wrapView(car.m,car.kind==='plane'&&car.fly); // drawn on the side of an edge nearest the camera (wrap module)
   for(const c of G.chars){if(!c.m)buildCharModel(c);const m=c.m,g=m.g;g.scale.setScalar(c.vehicle&&c.vehicle.boss&&c.state==='alive'?BOSS.scale:1);
-    g.visible=!((c.state==='gone'&&!(c===p&&p.watch))||c.state==='bus')&&!(c.invuln>0&&Math.floor(t*12)%2)&&(c===p||Math.hypot(wdx(c.x-camera.position.x),wdy(camera.position.z,c.y))<3200);
+    g.visible=!((c.state==='gone'&&!(c===p&&p.watch))||(c.state==='bus'&&!G.bus))&&!(c.invuln>0&&Math.floor(t*12)%2)&&(c===p||Math.hypot(wdx(c.x-camera.position.x),wdy(camera.position.z,c.y))<3200);
     if(!g.visible)continue;
     g.position.set(c.x,c.z-(c.wet?5:0),c.y);g.rotation.set(0,Math.PI/2-c.face,0);
     setHeld(c);gadgetVisual(c,g,t);
@@ -5109,9 +5142,10 @@ function syncVisuals(dt){
     if(c.vehicle&&c.vehicle.kind==='board'&&c.state==='alive'){const v=c.vehicle,R=boardRot(v);m.legL.rotation.x=-0.2;m.legR.rotation.x=0.2;m.legL.rotation.z=-0.12;m.legR.rotation.z=0.12;m.armL.rotation.x=m.armR.rotation.x=-0.25;m.armL.rotation.z=-1.2;m.armR.rotation.z=1.2;
       if(R.sup){m.armL.rotation.x=m.armR.rotation.x=-Math.PI;m.armL.rotation.z=m.armR.rotation.z=0;m.legL.rotation.x=m.legR.rotation.x=0.9;}
       g.position.set(v.x,v.z+BOARD.hover+3+R.lift,v.y);g.rotation.set(R.pitch,Math.PI/2-v.ang+R.spin,0,'YXZ');} // standing on a hoverboard, arms out, turning with its tricks
-    if(c.vehicle&&c.vehicle.kind==='plane'&&c.vehicle.q&&c.state==='alive'){const v=c.vehicle,o=PLANE_SEAT.clone().applyQuaternion(v.q);g.position.set(v.x+o.x,v.z+o.y,v.y+o.z);g.quaternion.copy(v.q);} // in the cockpit: you turn, roll and loop with the plane
+    if(c.vehicle&&c.vehicle.kind==='plane'&&c.vehicle.q&&c.state==='alive'){const v=c.vehicle,o=PLANE_SEAT.clone().applyQuaternion(v.q);g.position.set(v.x+o.x,v.z+o.y,v.y+o.z);g.quaternion.copy(v.q);g.scale.setScalar(PILOT_SCALE);m.armL.rotation.x=m.armR.rotation.x=-0.7;m.armL.rotation.z=0.4;m.armR.rotation.z=-0.4;} // in the cockpit: you turn, roll and loop with the plane
     if(c.state==='dbno'){g.rotation.x=1.15;g.position.y+=7;m.armL.rotation.x=-2.5+Math.sin(c.walk)*0.4;m.armR.rotation.x=-2.5-Math.sin(c.walk)*0.4;m.legL.rotation.x=Math.sin(c.walk)*0.3;m.legR.rotation.x=-Math.sin(c.walk)*0.3;}
-    if(c.state==='down'&&c.koPlane&&c.koPlane.q){const v=c.koPlane,o=PLANE_SEAT.clone().applyQuaternion(v.q);g.position.set(v.x+o.x,v.z+o.y,v.y+o.z);g.quaternion.copy(v.q);g.rotateZ(0.35);m.legL.rotation.x=m.legR.rotation.x=-Math.PI/2;m.armL.rotation.x=m.armR.rotation.x=0;}
+    if(c.state==='bus'&&G.bus)busSeat(c,g,m); // riding the battle bus: in a seat you can see through the windows
+    if(c.state==='down'&&c.koPlane&&c.koPlane.q){const v=c.koPlane,o=PLANE_SEAT.clone().applyQuaternion(v.q);g.position.set(v.x+o.x,v.z+o.y,v.y+o.z);g.quaternion.copy(v.q);g.scale.setScalar(PILOT_SCALE);g.rotateZ(0.35);m.legL.rotation.x=m.legR.rotation.x=-Math.PI/2;m.armL.rotation.x=m.armR.rotation.x=0;}
     else if(c.state==='down'){g.rotation.x=-Math.PI/2;g.position.y+=6;}
     else if(c.state==='carried'||c.state==='delivering'){g.rotation.z=Math.sin(t*4)*0.2;}
     else if(c.state==='sky'&&!c.glide){g.rotation.x=0.9;}
@@ -5126,7 +5160,7 @@ function syncVisuals(dt){
     m.body.scale.setScalar(c.hitFlash>0?1.08:1);
     if(m.tag){if(c.zombie){m.tag.visible=(HBARS||c.hp<c.maxHp)&&c.state==='alive';if(m.tag.visible&&c.tagHp!==c.hp){c.tagHp=c.hp;c.name='';drawTag(c);}}
       else{m.tag.visible=(c.state==='alive'||c.state==='dbno')&&(isMate(c)||dist(c,p)<(HBARS?750:420));{const tk=c.hp+c.shield*1000+(c.state==='dbno'?1e6+Math.round(c.bleed):0)+(HBARS?0.5:0);if(m.tag.visible&&c.tagHp!==tk){c.tagHp=tk;drawTag(c);}}}}
-    if(m.ring)m.ring.visible=c.state==='alive';}
+    if(m.ring)m.ring.visible=c.state==='alive'&&!(c.vehicle&&c.vehicle.kind==='plane'&&c.vehicle.fly);} // (no ring floating under a flying plane)
   updatePets(dt,t);
   // far-away small things are not drawn (they would be lost in the haze anyway, and the big island has many); checked 5 times a second
   if(!G.cullT||t-G.cullT>0.2){G.cullT=t;const cx=camera.position.x,cz=camera.position.z,near=(x,y,r)=>(x-cx)*(x-cx)+(y-cz)*(y-cz)<r*r;
@@ -5180,7 +5214,7 @@ function animateWorld(dt,t,focus){
   pGeo.setDrawRange(0,n);pGeo.attributes.position.needsUpdate=true;pGeo.attributes.color.needsUpdate=true;puGeo.setDrawRange(0,m);puGeo.attributes.position.needsUpdate=true;
 }
 // where the pilot sits in a plane (in the plane's own frame: up, forward): head under the cockpit glass, legs inside
-const PLANE_SEAT=new THREE.Vector3(0,-13,6);
+const PLANE_SEAT=new THREE.Vector3(0,-2,6),PILOT_SCALE=0.8; // (a pilot sits a little smaller and higher, so only the head and shoulders show above the cockpit)
 // flying a plane: the camera rides behind and a little above it, whichever way it turns, rolls or loops (and jumps along when the plane wraps across the map)
 // Flying level, the camera rides right behind the plane. In a loop (or any steep climb or dive) it would end up straight below
 // or above the plane and flip over, so instead it eases into a loop view: it keeps the direction you were flying, pulls back
