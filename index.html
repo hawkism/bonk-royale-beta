@@ -195,6 +195,8 @@ body:not(.touch) #prompt:not([hidden])~#autoTag{bottom:calc(262px + env(safe-are
 @media (max-width:640px){#bottom{bottom:60px}#prompt{bottom:210px}#tl{max-width:100%;top:184px}}
 /* gadgets you brought, with their fuel (30b-gadgets) */
 #gadBar{display:flex;gap:6px;padding:4px 6px}#gadBar .gad{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}#gadBar .gad.on{color:#43c6ff}#gadBar .gad.empty{opacity:.45}#gadBar kbd{font-size:11px}
+/* F46: modes with no fighting and no building (races, Flight School): no weapon bar, materials, shield or build hints */
+body.nofight #slotRow,body.nofight #wname,body.nofight #sh,body.nofight #buildHint{display:none}
 /* @module src/css/03-layers-touch.css: Layer order while playing, and the touch controls (buttons stay inside the safe area). */
 /* @module src/css/03-layers-touch.css: Layer order while playing, and the touch controls (buttons stay inside the safe area). */
 /* layer order while playing (bottom → top): world · screen effects 2 · touch move/look area 3 · messages 4 · HUD 5 · touch buttons 6 · editor 7 · menus 10+ */
@@ -701,7 +703,7 @@ body.tediting .tb.ghost{opacity:.3}body.tediting #lobbyBar{display:none!importan
 // Release track of this copy: "stable" (main), "beta" or "alpha" (newest features). Set when a copy is published.
 const BONK_TRACK="beta";
 // Version: 0.1 is the first numbered release; every push to GitHub after that adds 0.1. "-dev" = not released yet.
-const BONK_VERSION="0.5";
+const BONK_VERSION="0.5.1";
 // Relay (TURN) for the website's direct links, from the owner's Metered.ca account (free plan, no card on file).
 // Only used when two devices cannot link directly (cellular data, strict school/office networks). These details are
 // public inside the website; the worst case of misuse is running out of the free monthly allowance, never a bill.
@@ -2473,10 +2475,12 @@ function announce(big,sub,dur=2.6,cls){if(NET_CTX){netTell(NET_CTX,'ann',[big,su
 function poiBelowAnn(){const el=$('poi');if(!el||el.hidden)return;el.style.top=annEl.hidden?'':Math.max(annEl.offsetTop+annEl.offsetHeight+6,innerHeight*0.24)+'px';} // (offset sizes: not shrunk by the pop animation)
 const textTex=new Map();
 function addText(x,y,z,text,col,size=16){if(NETH()&&netNear(x,y))netEv(['x',ri(x),ri(y),ri(z),text,col,size],1);
+  // F47: no pile-ups: the same word already floating close by (and just made) is not added again, and at most 40 float at once
+  if(G&&(G.texts.length>=40||G.texts.some(o=>o.text===text&&o.life>o.max-0.35&&Math.hypot(o.mesh.position.x-x,o.mesh.position.z-y)<90)))return;
   const k=text+'|'+col;let t=textTex.get(k);if(!t){const c=document.createElement('canvas');c.width=256;c.height=64;const g=c.getContext('2d');let fs=48;const F=()=>g.font=fs+'px "Lilita One", "Trebuchet MS", sans-serif';F();while(g.measureText(text).width>232&&fs>18){fs-=2;F();}g.textAlign='center';g.textBaseline='middle';
     g.lineWidth=Math.max(5,fs*0.19);g.strokeStyle='#1b2235';g.strokeText(text,128,34);g.fillStyle=col;g.fillText(text,128,34);t=new THREE.CanvasTexture(c);textTex.set(k,t);}
   const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:t,transparent:true,depthTest:false,sizeAttenuation:false}));const s=size*0.0034;sp.scale.set(s*4,s,1);sp.position.copy(W3(x,y,z));sp.renderOrder=10;scene.add(sp);
-  G.texts.push({mesh:sp,life:0.9,max:0.9,s});}
+  G.texts.push({mesh:sp,life:0.9,max:0.9,s,text});}
 function feed(html){if(NET_CTX){const nm='<b>'+esc(NET_CTX.name)+'</b>';html=String(html).split('<b style="color:#ffcb1f">You</b>').join(nm).split('<b style="color:#ffcb1f">you</b>').join(nm);}if(NETH())netEv(['f',netFeedHtml(html)]);G.feed.unshift({html,t:G.time});if(G.feed.length>5)G.feed.length=5;renderFeed();}
 function renderFeed(){$('feed').innerHTML=G?G.feed.map(f=>'<div>'+f.html+'</div>').join(''):'';}
 function toast(t){if(NET_CTX){netTell(NET_CTX,'toast',t);return;}const el=$('prompt');el.textContent=touchText(t);el.hidden=false;G.toastT=1.4;}
@@ -3238,6 +3242,9 @@ function wants(c,id,r){if(id==='bricks'||id==='fuel'||id==='gshield')return fals
 function stuckCheck(c,step){const ai=c.ai;if(ai.wantMove&&Math.hypot(c.x-ai.lastX,c.y-ai.lastY)<5)ai.stuckT+=step;else ai.stuckT=0;
   if(ai.stuckT>0.75){ai.unstuckT=0.7;const a=Math.random()*TAU;ai.ux=Math.cos(a);ai.uy=Math.sin(a);ai.stuckT=0;ai.turn*=-1;ai.gx=null;
     let np=null,nd=90;for(const p of G.pieces){const d=Math.hypot(p.cx-c.x,p.cy-c.y);if(d<nd&&Math.abs(p.ob.z0-c.z)<60){nd=d;np=p;}}ai.breakP=np;}
+  // F50: going nowhere for 10 s while trying to move (wobbling in a pocket of furniture, or at an edge): hop and head somewhere new
+  if(!ai.ax||Math.hypot(c.x-ai.ax,c.y-ai.ay)>80){ai.ax=c.x;ai.ay=c.y;ai.aT=0;}else if(ai.wantMove){ai.aT=(ai.aT||0)+step;
+    if(ai.aT>10){ai.aT=0;const s=freeSpot(c.x,c.y,700,0,null),d=Math.hypot(s.x-c.x,s.y-c.y)||1;ai.gx=s.x;ai.gy=s.y;ai.unstuckT=1.4;ai.ux=(s.x-c.x)/d;ai.uy=(s.y-c.y)/d;ai.lost=(ai.lost||0)+1;if(c.onGround){c.vz=Math.max(c.vz,420);c.onGround=false;}}}
   ai.lastX=c.x;ai.lastY=c.y;}
 // loot a bot can't reach (a chest behind a wall, say): no closer for 5 s, so it leaves that spot alone for 30 s
 // up on a roof, loot down on the ground is not reachable from here (the bot wanders, which takes it off the roof)
@@ -3340,6 +3347,22 @@ function damageCar(car,amt,src){if(car.dead||G.mode==='race'||NETC())return;car.
   if(car.hp<=0){car.dead=true;car.m.visible=false;car.respawnAt=car.boss?Infinity:G.time+(car.kind==='mech'?40:25);burst(car.x,car.y,car.z+20,60,'confetti',null,260);burst(car.x,car.y,car.z+20,14,'puff','#ffffff',120);
     sfx('boom',car);addText(car.x,car.y,car.z+64,'KABOOM!','#ff7b1c',22);const d=car.driver;if(car.boss&&d)tellOrAnnounce(d,'💥 BOSS DOWN!','Your boss mech was beaten! Keep bonking!',3);if(d){exitCar(d);d.vz=380;d.onGround=false;damage(d,20,src,'car');}}}
 function nearestCar(c){let b=null,bd=62;const near=car=>38+(car.r||24);for(const car of G.cars){if(car.dead||car.driver)continue;const d=Math.hypot(wdx(car.x-c.x),wdy(c.y,car.y))-near(car)+62;if(d<bd&&Math.abs(car.z-c.z)<40){bd=d;b=car;}}return b;}
+/* F44: easy driving on a touch screen. Point the stick where you want to go (up = the way the camera looks, which swings
+   round behind the car as you drive): the car steers itself toward it, smoothly, and the further you push the faster it
+   goes (all the way: turbo). It eases off in a sharp turn, steers round a wall just in front, and if it gets stuck it backs
+   up and turns by itself. Point the stick behind you and it turns round. Let go and it rolls to a stop. */
+function carTouch(d){return d.remote?!!d.rin.tc:d.isPlayer&&TOUCH.on&&!kbFlying();}
+function carAssist(car,d,dt){const t=d.remote?d.rin.ts||[0,0]:[TOUCH.mag>0?TOUCH.mx:0,TOUCH.mag>0?TOUCH.my:0],mag=Math.min(1,Math.hypot(t[0],t[1])),yaw=d.remote?d.rin.yaw:G.yaw;
+  if(car.revT>0){car.revT-=dt;return{thr:-0.8,str:car.revS||0};}
+  if(mag<0.15){car.stuckT=0;return{thr:0,str:0};}
+  const want=yaw+Math.atan2(t[0],-t[1]);let diff=angDiff(car.ang,want);
+  // a wall or a tree just in front: steer round it (the side that is clear)
+  const probe=a=>{const x=car.x+Math.cos(car.ang+a)*80,y=car.y+Math.sin(car.ang+a)*80;return walkBlocked(x,y,10);};
+  if(Math.abs(diff)<0.8&&probe(0)){const l=probe(-0.6),r=probe(0.6);if(l!==r)diff=l?0.9:-0.9;}
+  const thr=mag*(Math.abs(diff)>1.6?0.5:Math.abs(diff)>0.8?0.75:1);
+  // stuck (pushing but not moving): back up for a moment, turning the other way
+  if(Math.abs(car.speed)<35){car.stuckT=(car.stuckT||0)+dt;if(car.stuckT>0.9){car.stuckT=0;car.revT=0.8;car.revS=-Math.sign(diff||1);}}else car.stuckT=0;
+  return{thr,str:clamp(diff*2.2,-1,1)};}
 function enterCar(c,car){car.driver=c;c.vehicle=car;c.useT=0;c.emote=null;c.burstQ=0;if(c.isPlayer){G.buildMode=null;sfx('honk');engineStart();G.yaw=car.ang;}}
 function exitCar(c){const car=c.vehicle;if(!car)return;car.driver=null;c.vehicle=null;const a=car.ang+Math.PI/2,o=(car.r||24)+18;let x=car.x+Math.cos(a)*o,y=car.y+Math.sin(a)*o;
   if(pointBlocked(x,y,14)){x=car.x-Math.cos(a)*o;y=car.y-Math.sin(a)*o;}c.x=WRAP?x:clamp(x,20,WORLD-20);c.y=WRAP?y:clamp(y,20,WORLD-20);if(!wrapPos(c)&&c.y<20&&!inIsle(c.x,c.y,14))c.y=20;c.z=car.z;c.onGround=false;c.vz=120;if(c.isPlayer)engineStop();
@@ -3351,13 +3374,14 @@ function updateCars(dt){
     const d=car.driver;let thr=0,str=0;const me=d&&(d.isPlayer||d.remote)&&!G.victory&&!G.paused,K=k=>d.remote?d.rkeys.has(k):keys.has(k);
     if(car.kind==='mech')mechDrive(car,d,me,K,dt);else if(car.kind==='plane')planeDrive(car,d,me,K,dt);else if(car.kind==='boat')boatDrive(car,d,me,K,dt);else if(car.kind==='board')boardDrive(car,d,me,K,dt);else if(car.kind==='catapult')catapultDrive(car,d,me,K,dt);else if(car.kind==='heli')heliDrive(car,d,me,K,dt);else{
     if(me&&autoOn(d)){const r=XM[G.mode]&&XM[G.mode].drive?XM[G.mode].drive(car,dt):carAuto(car,dt);thr=r.thr;str=r.str;}
+    else if(me&&carTouch(d)){const r=carAssist(car,d,dt);thr=r.thr;str=r.str;} // F44: on a touch screen, point the stick where you want to go
     else if(me){if(K('w')||K('arrowup'))thr=1;if(K('s')||K('arrowdown'))thr=-1;if(K('a')||K('arrowleft'))str=-1;if(K('d')||K('arrowright'))str=1;}
     else if(d&&!d.isPlayer&&!d.remote&&XM[G.mode]&&XM[G.mode].drive){const r=XM[G.mode].drive(car,dt);thr=r.thr;str=r.str;}
     if(me&&G.mode==='race'&&G.time<G.goAt)thr=0;
     const wet=inWater(car.x,car.y)&&car.z<4,icy=tileAt(car.x,car.y)===5&&car.z<4,maxF=(wet?(MAP.slow||0.55):1)*(me&&K('shift')?540:430)*(car.maxMul||1);
     if(car.onGround){if(thr>0)car.speed=Math.min(maxF*thr,car.speed+(car.speed<0?700:330)*dt);else if(thr<0)car.speed=Math.max(-170,car.speed-(car.speed>0?700:260)*dt);else car.speed*=Math.exp(-1.4*dt);
       if(car.speed>maxF)car.speed=lerp(car.speed,maxF,Math.min(1,dt*3));
-      car.steer=lerp(car.steer,str,Math.min(1,dt*8));car.ang+=car.steer*clamp(Math.abs(car.speed)/170,0,1)*2.3*Math.sign(car.speed||1)*dt;}
+      car.steer=lerp(car.steer,str,Math.min(1,dt*8));car.ang+=car.steer*Math.max(clamp(Math.abs(car.speed)/170,0,1),thr?0.35:0)*2.3*Math.sign(car.speed||thr||1)*dt;} // (a car can turn a little even when it is slow)
     const grip=icy?1.1:wet?4:9,k=car.onGround?Math.min(1,dt*grip):0;car.vx+=(Math.cos(car.ang)*car.speed-car.vx)*k;car.vy+=(Math.sin(car.ang)*car.speed-car.vy)*k;
     if(icy&&me&&Math.abs(angDiff(car.ang,Math.atan2(car.vy,car.vx)))>0.4&&Math.hypot(car.vx,car.vy)>150&&Math.random()<dt*3)addText(car.x,car.y,car.z+50,'DRIFT!','#7fc8ef',13);}
     car.x+=car.vx*dt;car.y+=car.vy*dt;if(car.kind==='plane'&&car.fly)planeWrap(car);
@@ -3557,7 +3581,7 @@ function planeDrive(car,d,me,K,dt){car.cd=Math.max(0,car.cd-dt);
     if(slow>0){const f3=new THREE.Vector3(0,0,1).applyQuaternion(car.q),v3=new THREE.Vector3(V.x,V.z,V.y).normalize(),rq=new THREE.Quaternion().setFromUnitVectors(f3,v3);
       car.q.premultiply(new THREE.Quaternion().slerp(rq,Math.min(1,slow*2.2*dt)));}}
   // a banked plane turns (the lift is tilted): a gentle turn about the world's up
-  _pq.setFromAxisAngle(_pv.set(0,1,0),-Math.sin(bank)*Math.cos(nose)*0.9*PS.turn*(car.hardT>0?1.7:1)*rate*dt);car.q.premultiply(_pq);
+  _pq.setFromAxisAngle(_pv.set(0,1,0),-Math.sin(bank)*Math.cos(nose)*1.15*PS.turn*(car.hardT>0?1.7:1)*rate*dt);car.q.premultiply(_pq);
   if((auto||!d)&&!pilot){_pe.setFromQuaternion(car.q,'YXZ');car.q.setFromEuler(_pe.set(lerp(_pe.x,-0.04,Math.min(1,dt*1.5)),_pe.y,lerp(_pe.z,0,Math.min(1,dt*1.5)),'YXZ'));} // autopilot (or nobody flying): wings level
   car.q.normalize();
   const F=planeAxis(car,0,0,1),U=planeAxis(car,0,1,0),fs=V.x*F.x+V.y*F.y+V.z*F.z,gz=groundAt(car.x,car.y,car.z+20);
@@ -3605,7 +3629,7 @@ function planeAssist(car,dt,s){
   if(s.helper&&XM[G.mode]&&XM[G.mode].ringFor){const g=XM[G.mode].ringFor(car);if(g){const[dx,dy]=pvec(car,g),h=angDiff(car.ang,Math.atan2(dy,dx)),el=clamp(Math.atan2(g.z-car.z,Math.max(Math.hypot(dx,dy),1)),-0.5,0.5);
     s=Object.assign({},s,{x:Math.abs(s.x)<0.35?clamp(s.x+h*1.2,-0.6,0.6):s.x,y:Math.abs(s.y)<0.35?clamp(s.y+el*1.6,-0.5,0.5):s.y});}}
   const loop=false;
-  let wantBank=clamp(s.x,-1,1)*(car.hardT>0?1.4:1.05),wantNose=s.y*0.5+Math.abs(Math.sin(bank))*0.12; // (at most about 30 degrees up or down, 60 degrees of bank)
+  let wantBank=clamp(s.x,-1,1)*(car.hardT>0?1.4:1.12),wantNose=s.y*0.5+Math.abs(Math.sin(bank))*0.12; // (at most about 30 degrees up or down, 60 degrees of bank)
   if(spd<230&&wantNose>0)wantNose=-0.1; // too slow to climb: nose down a little to keep flying
   if(!loop&&alt<140&&car.vz<-60&&s.y>-0.2){wantNose=Math.max(wantNose,0.15);wantBank=0;} // too low and sinking: level off
   // coming down to land: a gentle glide, then the wings level and the nose comes up a little (a flare), so it lands instead of BONKing
@@ -3616,7 +3640,7 @@ function planeAssist(car,dt,s){
   if(alt+car.vz*1.1<50&&car.vz<-80){wantNose=Math.max(wantNose,0.3);wantBank*=0.3;} // about to hit the ground whatever the stick says: pull up
   if(alt<150&&spd>330&&!landing)wantNose=Math.max(wantNose,alt<120?0.15:0);
   let avoid=false;{const h=Math.hypot(car.vx,car.vy)||1,ux=car.vx/h,uy=car.vy/h,z=car.z-35;if(z>gz+12)scan:for(let d=15;d<h*(landing?1:2.5);d+=15)for(const o of[0,22,-22,40,-40]){const x=car.x+ux*d-uy*o,y=car.y+uy*d+ux*o;if(blocked3D(wpx(x),wpy(x,y),z)){wantNose=Math.max(wantNose,spd>300?0.5:0.3);wantBank*=0.3;avoid=true;break scan;}}} // a tree or a building in the next 2.5 s (wing tips too): climb over it, at full power // too fast to land: hold the height (the engine eases off) until it is slow enough
-  return{t:s.boost||avoid?1:s.slow?0.2:alt<170&&s.y<-0.2?0.2:loop?1:0.8,p:loop?1:clamp((wantNose-nose)*3,-1,1),r:loop?0:clamp((wantBank-bank)*3,-1,1),y:loop?0:s.x*0.4*clamp(1-Math.abs(bank),0,1)};}
+  return{t:s.boost||avoid?1:s.slow?0.2:alt<170&&s.y<-0.2?0.2:loop?1:0.8,p:loop?1:clamp((wantNose-nose)*3,-1,1),r:loop?0:clamp((wantBank-bank)*3.6,-1,1),y:loop?0:s.x*0.55*clamp(1-Math.abs(bank),0,1)};}
 // the plane's twin foam machine guns: hold the trigger and they rattle away from the wing tips, straight ahead, taking turns
 function planeGuns(car,d){car.cd=0.07;car.gun=car.gun?0:1;const F=planeAxis(car,0,0,1),Lf=planeAxis(car,1,0,0),s=car.gun?1:-1,sp=1400+Math.max(0,car.speed||0),j=()=>(Math.random()-0.5)*0.03;
   G.projs.push({t:'bolt',x:car.x+F.x*30+Lf.x*38*s,y:car.y+F.y*30+Lf.y*38*s,z:car.z+16+F.z*30+Lf.z*38*s,vx:(F.x+j())*sp,vy:(F.y+j())*sp,vz:(F.z+j())*sp,life:0.75,dmg:6,owner:d,wid:'rapid'});if(car.gun)sfx('pew2',car);}
@@ -3908,7 +3932,9 @@ function planeLook(g,col,b){if(!b)return;const kids=g.children,body=kids[0],nose
 // the Hangar tab in the Locker: five rows (paint, decal, wings, body, tail), and how your plane flies with these parts
 function renderHangar(){const now=hangarNow(),s=planeStats({driver:{isPlayer:true,look:{plane:now}}}),bar=v=>'▮'.repeat(clamp(Math.round(v*5),1,8));
   $('lockGrid').innerHTML=`<div class="hgStats">✈️ Your plane · Speed ${bar(s.speed)} · Turning ${bar(s.turn)} · Roll ${bar(s.roll)} · Lift ${bar(s.lift)}${s.tough?' · 💪 Tough':''}</div>`+HANGAR_SECS.map(([k,n,list])=>`<div class="hgSec"><b>${n}</b>`+list.map(it=>{const locked=hangarLocked(it),on=now[k]===it.id;
-    return`<button type="button" class="litem${on?' on':''}${locked?' locked':''}" data-sec="${k}" data-id="${it.id}" ${locked?'disabled':''} style="--rc:${it.col||'#9fe3ff'}"><b>${esc(it.name)}</b><span>${locked?(it.school==='gold'?'Win gold in every Flight School lesson':it.school?'Finish Flight School':'Unlocks at level '+it.lvl):on?'Equipped':it.tip||'Tap to equip'}</span></button>`;}).join('')+'</div>').join('');}
+    return`<button type="button" class="litem${on?' on':''}${locked?' locked':''}" data-sec="${k}" data-id="${it.id}" ${locked?'disabled':''} style="--rc:${hangarCardCol(it.col)}"><b>${esc(it.name)}</b><span>${locked?(it.school==='gold'?'Win gold in every Flight School lesson':it.school?'Finish Flight School':'Unlocks at level '+it.lvl):on?'Equipped':it.tip||'Tap to equip'}</span></button>`;}).join('')+'</div>').join('');}
+// a card's colour: the paint, darker for very light paints so the white writing on it can be read
+function hangarCardCol(c){if(!c)return'#9fe3ff';const n=parseInt(c.slice(1),16),l=(0.3*(n>>16&255)+0.59*(n>>8&255)+0.11*(n&255))/255;return l>0.7?shadeHex(c,0.6):c;}
 function hangarPick(sec,id){PROG.locker['pl_'+sec]=id;saveProg();renderLocker();sfx('pickup');}
 LOCK_TABS.push(['hangar','✈️ Hangar',[]]);
 
@@ -4853,7 +4879,9 @@ XM.rescue={name:'Rescue Squad',
   // the bots: in a truck or helicopter the vehicle does the work; on foot, head for the nearest fire and spray it
   bot(c){const ai=c.ai,R=G.rs;if(!R||c.vehicle)return;const f=rescueNearFire(c,1e9);if(!f){ai.mode='obj';ai.gx=R.pad.x;ai.gy=R.pad.y;return;}
     const a=rand(-60,60);ai.target=null;ai.mode='obj';ai.gx=wpx((f.ax??f.x)+(f.ay!=null&&f.ay!==f.y?a:0));ai.gy=wpy(ai.gx,(f.ay??f.y)+(f.ax!=null&&f.ax!==f.x?a:0));}, // (from the side it burns on)
-  botTick(c,dt){const R=G.rs;if(!R||c.vehicle)return null;const f=rescueNearFire(c,330);if(!f)return null;
+  botTick(c,dt){const R=G.rs;if(!R||c.vehicle)return null;const f=rescueNearFire(c,330);if(!f)return null;const ai=c.ai;
+    // F51: spraying for 6 s and the fire is no smaller (a tree or a roof in the way): walk to its spray spot for a while instead
+    if(ai.walkT>G.time)return null;if(ai.spF!==f){ai.spF=f;ai.spHp=f.hp;ai.spT=0;}ai.spT+=dt;if(ai.spT>6){if(f.hp>=ai.spHp-1)ai.walkT=G.time+8;ai.spF=null;}
     c.face=Math.atan2(wdy(c.y,f.y),wdx(f.x-c.x));if(c.cd<=0){c.cur=1;const h=handPos(c),dx=wdx(f.x-h.x),dy=wdy(h.y,f.y),D=Math.hypot(dx,dy)||1,t=D/WEAPONS.squirt.speed;
       fire(c,norm3({x:dx,y:dy,z:f.z+12-h.z+0.5*420*t*t}));}
     return[0,0,false];},
@@ -4982,7 +5010,7 @@ XM.school={name:'Flight School',
       stats:SCHOOL_LESSONS.map((L,i)=>[MEDAL[S.got[i]||0],L.name])};}};
 
 /* ---- Stunt Course ---- */
-const STUNT={time:60,ringT:6,max:3,decay:12};
+const STUNT={time:60,ringT:6,max:3,decay:12,cap:45,len:180}; // (a blue ring tops your time up to at most 45 s left; the whole course lasts at most 3 minutes)
 XM.stunt=Object.assign(Object.create(XM.airrace),{name:'Stunt Course',laps:99,
   init(){XM.airrace.init.call(this);const n=G.cps.length;G.cps.forEach((c,i)=>{c.kind=i===0?'ring':i%3===1?'time':i%3===2?'trick':'ring';});
     for(const car of G.cars)Object.assign(car,{sc:0,mul:1,tl:STUNT.time,lastRingT:0,done:false});
@@ -5007,14 +5035,14 @@ XM.stunt=Object.assign(Object.create(XM.airrace),{name:'Stunt Course',laps:99,
       const tell=(t,s)=>{if(d.isPlayer){addText(car.x,car.y,car.z+60,t,'#ffcb1f',18);if(s)toast(s);}else if(d.remote)netTell(d,'ann',[t,s||'',1.2]);};
       // the next ring in the course
       const cp=G.cps[car.next];if(airSegDist(a,car,cp)<=AIR_RING+20){const trick=cp.kind==='trick'&&(car.trick||G.time-(car.trickT||-99)<2.5),pts=Math.round(100*car.mul*(trick?2:1));
-        car.sc+=pts;car.mul=Math.min(STUNT.max,car.mul+0.25);car.lastRingT=G.time;if(cp.kind==='time')car.tl+=STUNT.ringT;
+        car.sc+=pts;car.mul=Math.min(STUNT.max,car.mul+0.25);car.lastRingT=G.time;if(cp.kind==='time')car.tl=Math.min(Math.max(car.tl,STUNT.cap),car.tl+STUNT.ringT);
         tell('+'+pts+(trick?' TRICK x2!':''),cp.kind==='time'?'⏱️ +'+STUNT.ringT+' seconds!':'');if(d.isPlayer){sfx('pickup');burst(cp.x,cp.y,cp.z,16,'confetti',null,160);}
         car.lastCp=car.next;car.next=(car.next+1)%n;car.stuckT=0;car.around=false;}
       // bonus: under a gate (low, between the posts), through an updraft (it throws you up)
       for(const g of G.gates){const u0=(a.x-g.x)*Math.cos(g.a)+(a.y-g.y)*Math.sin(g.a),u1=(car.x-g.x)*Math.cos(g.a)+(car.y-g.y)*Math.sin(g.a),v=-(car.x-g.x)*Math.sin(g.a)+(car.y-g.y)*Math.cos(g.a),alt=car.z-groundAt(car.x,car.y,car.z+20);
         if(Math.sign(u0)!==Math.sign(u1)&&Math.abs(v)<g.w/2&&alt<g.top-10&&alt>8&&G.time-(car.gateT||-9)>3){car.gateT=G.time;car.sc+=250;tell('+250 UNDER THE GATE!');if(d.isPlayer)sfx('ding');}}
       for(const u of G.ups)if(Math.hypot(car.x-u.x,car.y-u.y)<110&&Math.abs(car.z-u.z)<50&&G.time-(car.upT||-9)>2){car.upT=G.time;car.vz+=650;car.sc+=50;tell('+50 UPDRAFT!');if(d.isPlayer)sfx('boing');}}
-    if(!G.endAt&&G.raceStart&&G.cars.every(c=>c.done||!c.driver))this.finish();},
+    if(!G.endAt&&G.raceStart&&(G.cars.every(c=>c.done||!c.driver)||G.time-G.raceStart>=STUNT.len))this.finish();},
   finish(){if(G.endAt)return;finishFFA(ffaPlaces(c=>c.raceCar?c.raceCar.sc:0),'Stunt Course');},
   hud(c1,c2,c3,p){const car=p.raceCar;if(!car)return;const list=ffaPlaces(c=>c.raceCar?c.raceCar.sc:0),me=list.find(e=>e.c===p);
     setC(c1,'chip final');setH(c1,'🎢 '+(car.sc||0)+' points · x'+(car.mul||1).toFixed(2).replace(/0$/,''));setC(c2,me.place===1?'chip final':'chip');setH(c2,'Position '+me.place+' / '+list.length);
@@ -5616,7 +5644,8 @@ function updateHUD(){updateNetHUD();gadgetHud();{const at=$('autoTag'),on=!!(G&&
   else if(G.mode==='team'){setC(c1,'chip');setH(c1,`<span style="color:#e2312b">Red ${G.score.red}</span> – <span style="color:#1f6fd6">${G.score.blue} Blue</span>`);setC(c2,'chip');setH(c2,p.kos+' KOs · first to '+TEAM_GOAL);setC(c3,'chip storm');setH(c3,'Time '+fmt(G.len-G.mt));}
   else{const Z=G.z,left=Z.toSpawn+G.chars.filter(c=>c.zombie&&!c.eliminated).length;setC(c1,'chip zombie');setH(c1,Z.wave?'Wave '+Z.wave:'Get ready');setC(c2,'chip');setH(c2,Z.state==='break'?'Next wave in '+fmt(Z.t):left+' zombies left');
     setC(c3,G.lives>0?'chip':'chip final');setH(c3,'Drone rescues: '+G.lives);}
-  $('finalChip').hidden=!G.noRespawn;
+  $('finalChip').hidden=!G.noRespawn||G.mode==='school'||G.mode==='balloons'; // (F46: no rescue drones to run out of in those)
+  document.body.classList.toggle('nofight',!!(MODE().noCombat&&!MODE().freeBuild)); // F46: no weapon bar, materials or build hints where you cannot fight or build
   const hp=Math.max(0,Math.round(p.hp));$('hpfill').style.width=hp+'%';$('hpfill').style.background=hp>60?'#4cd05a':hp>30?'#ffcb1f':'#ff4d4d';setT($('hptxt'),hp+' HP');
   for(const mm of['wood','stone','metal']){const el=$('mat-'+mm);setT(el.lastChild,String(G.mats[mm]));el.classList.toggle('on',G.matSel===mm);}
   {const sh=Math.round(p.shield);$('shfill').style.width=sh+'%';setT($('shtxt'),sh+' shield');}
@@ -5648,7 +5677,7 @@ function updateHUD(){updateNetHUD();gadgetHud();{const at=$('autoTag'),on=!!(G&&
     else if(p.vehicle&&p.vehicle.kind==='boat')h='⛵ <kbd>W</kbd> go · <kbd>A</kbd><kbd>D</kbd> steer · <kbd>Click</kbd> foam cannon · <kbd>F</kbd> get out';
     else if(p.vehicle)h='Driving! <kbd>F</kbd> get out · <kbd>Space</kbd> honk · <kbd>Shift</kbd> turbo';else if(p.ride)h='🎢 Riding the '+p.ride.name+' · <kbd>E</kbd> or <kbd>Space</kbd> to get off';else if(reviveTarget(p))h='Hold <kbd>E</kbd> to revive '+esc(reviveTarget(p).name);else if(nearInteract(p)){const ni=nearInteract(p);h=ni.type==='ride'?'Press <kbd>E</kbd> to ride the '+ni.o.name+'!':ni.type==='llama'?'Press <kbd>E</kbd> to open the Loot Llama!':'Press <kbd>E</kbd> to buy '+esc(itemName(ni.o.id,ni.o.r))+' for '+ni.o.cost.n+' '+ni.o.cost.mat;}else if(p.state==='alive'&&nearestCar(p))h={mech:'Press <kbd>F</kbd> to climb into the MECH!',plane:'Press <kbd>F</kbd> to fly the PLANE!',board:'Press <kbd>F</kbd> to ride the HOVERBOARD!',catapult:'Press <kbd>F</kbd> to use the CATAPULT!',mixer:'Press <kbd>F</kbd> to drive the CEMENT MIXER!',bumper:'Press <kbd>F</kbd> to drive a BUMPER CAR!',heli:'Press <kbd>F</kbd> to fly the HELICOPTER!',firetruck:'Press <kbd>F</kbd> to drive the FIRE TRUCK!',boat:'Press <kbd>F</kbd> to drive the BOAT!'}[nearestCar(p).kind]||'Press <kbd>F</kbd> to drive';
     else if(G.swap&&p.state==='alive')h='Press <kbd>E</kbd> to swap for '+esc(itemName(G.swap.id,G.swap.r??WEAPONS[G.swap.id].rar));
-    if(TOUCH.on&&h){if(TOUCH.act)h='';else if(p.vehicle){const v=p.vehicle;h=G.mode==='race'?'Use the joystick to drive · push it all the way for turbo':v.kind==='plane'?('✈️ '+Math.round((v.speed||0)/4)+' mph · '+(v.fly?'stick: steer, push forward to dive, pull back to climb · let go: fly level · LOOP and ROLL: tricks (hold ROLL for a hard turn) · BOOST: faster'+(G.mode==='airrace'?'':' · hold FIRE: machine guns · 💧: balloons'):'pull the stick back (or BOOST) to roll, and you take off by yourself')):v.kind==='catapult'?'🏰 Roll with the stick · aim at the fort and press FIRE to launch a foam boulder':v.kind==='heli'?'🚁 Stick: fly and turn · hold JUMP to go up, CROUCH to go down · hover by a roof, then land on the H':v.kind==='firetruck'?'🚒 Drive with the stick · aim at a fire and hold FIRE to spray':v.kind==='board'?'🛹 Steer with the stick · JUMP to jump, and again in the air for tricks · ride along a rail to grind':v.kind==='boat'?'⛵ Steer with the stick · FIRE for the foam cannon':v.kind==='mech'?(v.boss?'👑 BOSS MECH ':'🤖 MECH ')+Math.max(0,Math.round(v.hp))+'/'+v.maxHp+' · fire to blast · STOMP to jump':'';}else h=h.split('Press <kbd>Space</kbd> to jump out').join('Tap <b>JUMP OUT</b> to jump out').split('Press <kbd>Space</kbd>').join('Tap <b>GLIDE</b>');}
+    if(TOUCH.on&&h){if(TOUCH.act)h='';else if(p.vehicle){const v=p.vehicle;h=G.mode==='race'||v.kind==='car'||v.kind==='bumper'||v.kind==='firetruck'||v.kind==='mixer'?'🚗 Point the stick where you want to go · push it all the way for turbo · stuck? it backs up by itself':v.kind==='plane'?('✈️ '+Math.round((v.speed||0)/4)+' mph · '+(v.fly?'stick: steer, push forward to dive, pull back to climb · let go: fly level · LOOP and ROLL: tricks (hold ROLL for a hard turn) · BOOST: faster'+(G.mode==='airrace'?'':' · hold FIRE: machine guns · 💧: balloons'):'pull the stick back (or BOOST) to roll, and you take off by yourself')):v.kind==='catapult'?'🏰 Roll with the stick · aim at the fort and press FIRE to launch a foam boulder':v.kind==='heli'?'🚁 Stick: fly and turn · hold JUMP to go up, CROUCH to go down · hover by a roof, then land on the H':v.kind==='firetruck'?'🚒 Drive with the stick · aim at a fire and hold FIRE to spray':v.kind==='board'?'🛹 Steer with the stick · JUMP to jump, and again in the air for tricks · ride along a rail to grind':v.kind==='boat'?'⛵ Steer with the stick · FIRE for the foam cannon':v.kind==='mech'?(v.boss?'👑 BOSS MECH ':'🤖 MECH ')+Math.max(0,Math.round(v.hp))+'/'+v.maxHp+' · fire to blast · STOMP to jump':'';}else h=h.split('Press <kbd>Space</kbd> to jump out').join('Tap <b>JUMP OUT</b> to jump out').split('Press <kbd>Space</kbd>').join('Tap <b>GLIDE</b>');}
     if(h){pr.hidden=false;if(pr.dataset.t!==h){pr.dataset.t=h;pr.innerHTML=h;}}else{pr.hidden=true;pr.dataset.t='';}}
   if(G.feed.length&&G.time-G.feed[G.feed.length-1].t>7){G.feed.pop();renderFeed();}
   $('stormVig').style.opacity=st&&p.state==='alive'&&Math.hypot(p.x-st.x,p.y-st.y)>st.r?'1':'0';
