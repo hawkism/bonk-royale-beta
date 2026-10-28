@@ -703,7 +703,7 @@ body.tediting .tb.ghost{opacity:.3}body.tediting #lobbyBar{display:none!importan
 // Release track of this copy: "stable" (main), "beta" or "alpha" (newest features). Set when a copy is published.
 const BONK_TRACK="beta";
 // Version: 0.1 is the first numbered release; every push to GitHub after that adds 0.1. "-dev" = not released yet.
-const BONK_VERSION="0.5.2";
+const BONK_VERSION="0.5.3";
 // Relay (TURN) for the website's direct links, from the owner's Metered.ca account (free plan, no card on file).
 // Only used when two devices cannot link directly (cellular data, strict school/office networks). These details are
 // public inside the website; the worst case of misuse is running out of the free monthly allowance, never a bill.
@@ -5154,7 +5154,7 @@ const GADGETS=[
   {id:'hook',name:'Grappling Hook',ic:'🪝',shop:450,desc:'Press H (or HOOK) to zip to where you aim. Never wears out.'}];
 const FUEL_PACKS=[{id:'speed',name:'Speed Suit fuel (+30 s)',amt:30,shop:80},{id:'boots',name:'Rocket Boots fuel (+20 s)',amt:20,shop:80},
   {id:'jetpack',name:'Jetpack fuel (+20 s)',amt:20,shop:100},{id:'shield',name:'Shield Bubble (+5 charges)',amt:5,shop:80}];
-const SUIT_TIME=10,SPRING=1.45,HOOK_RANGE=1000,HOOK_SPEED=1150;
+const SUIT_TIME=10,SPRING=1.45,HOOK_RANGE=2000,HOOK_SPEED=1150;
 PROG.gadgets=PROG.gadgets||[];PROG.fuel=Object.assign({speed:0,boots:0,jetpack:0,shield:0},PROG.fuel||{});
 const gadDef=id=>GADGETS.find(g=>g.id===id);
 const gadOwned=id=>{const g=gadDef(id);return!!g&&(g.shop?owns('gadget',id):levelOf(PROG.xp)>=g.lvl);};
