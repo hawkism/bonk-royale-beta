@@ -703,7 +703,7 @@ body.tediting .tb.ghost{opacity:.3}body.tediting #lobbyBar{display:none!importan
 // Release track of this copy: "stable" (main), "beta" or "alpha" (newest features). Set when a copy is published.
 const BONK_TRACK="beta";
 // Version: 0.1 is the first numbered release; every push to GitHub after that adds 0.1. "-dev" = not released yet.
-const BONK_VERSION="0.5.1";
+const BONK_VERSION="0.5.2";
 // Relay (TURN) for the website's direct links, from the owner's Metered.ca account (free plan, no card on file).
 // Only used when two devices cannot link directly (cellular data, strict school/office networks). These details are
 // public inside the website; the worst case of misuse is running out of the free monthly allowance, never a bill.
@@ -4144,6 +4144,8 @@ XM.ctf={name:'Capture the Flag',goal:3,
   end(p,b){b.xm=b.xm||{};b.xm.ctf=b.xm.ctf||{wins:0};if(G.win)b.xm.ctf.wins++;
     return{title:G.draw?"It's a tie!":(G.score.red>G.score.blue?'Red':'Blue')+' team wins!',sub:'Capture the Flag',cls:G.win?'':G.draw?'purple':'blue',
       stats:[[G.score.red+' – '+G.score.blue,'Captures'],[p.kos,'Your KOs'],[p.rescues,'Drone rescues'],[fmt(G.mt),'Match time']]};}};
+// F52: maps with long, twisty race tracks get more time (bots take about 100 s a lap on the Big City)
+const RACE_LONG={city:2,cave:2};
 XM.race={name:'Car Race',laps:3,
   init(){
     // 8 gates around the map, plus a route between them that bots follow around buildings and trees
@@ -4162,6 +4164,7 @@ XM.race={name:'Car Race',laps:3,
       const car={x,y,z:groundAt(x,y,10),vz:0,ang:dir,speed:0,vx:0,vy:0,steer:0,hp:9999,driver:null,col:colr,home:{x,y,ang:dir},dead:false,respawnAt:0,onGround:true,padCd:0,wheelRot:0,m:carModel(colr),
         next:1,lap:0,lastCp:0,finished:false,stuckT:0,revT:0,maxMul:c.isPlayer?1:({easy:0.8,medium:0.9,hard:0.98}[opts.diff]||0.9)};
       G.cars.push(car);c.x=x;c.y=y;c.z=car.z;c.raceCar=car;enterCar(c,car);});
+    if(RACE_LONG[MAP_ID])G.len=Math.max(G.len,G.len*RACE_LONG[MAP_ID]); // F52: the Big City's and the cave's tracks are much longer: more time to finish the 3 laps
     G.goAt=G.time+4;G.finishers=[];G.yaw=dir;G.pitch=-0.15;G.cdShown=0;announce('Car Race!',`${this.laps} laps. Drive through every glowing gate in order. Get ready...`,3);},
   progress(c){const car=c.raceCar,n=G.cps.length;if(!car)return -1e9;if(car.finished)return 1e7-G.finishers.indexOf(c)*1000;
     const nx=G.cps[car.next];return(car.lap*n+((car.next-1+n)%n))*10000-Math.hypot(car.x-nx.x,car.y-nx.y);},
