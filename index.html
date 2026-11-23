@@ -703,7 +703,7 @@ body.tediting .tb.ghost{opacity:.3}body.tediting #lobbyBar{display:none!importan
 // Release track of this copy: "stable" (main), "beta" or "alpha" (newest features). Set when a copy is published.
 const BONK_TRACK="beta";
 // Version: 0.1 is the first numbered release; every push to GitHub after that adds 0.1. "-dev" = not released yet.
-const BONK_VERSION="0.5.4";
+const BONK_VERSION="0.5.5";
 // Relay (TURN) for the website's direct links, from the owner's Metered.ca account (free plan, no card on file).
 // Only used when two devices cannot link directly (cellular data, strict school/office networks). These details are
 // public inside the website; the worst case of misuse is running out of the free monthly allowance, never a bill.
@@ -1376,7 +1376,7 @@ MAPS.sky={name:'Sky Islands',desc:'Floating islands high above the clouds, joine
   tiles:['#6cc46a','#b98a52','#3d9be9','#e8f0f6','#ff6a1a','#a8dcf5','#d8f0ff'],side:'#8a7a6a',sky:['#6fc0f5','#eef9ff'],outside:'#ffffff',outsideY:-900,tree:'tree',rock:'rock',floaty:true,
   zone:isleZone2,b:[[13,12,4,3,'#ff7b1c'],[24,5,3,3,'#43c6ff'],[4,23,3,3,'#9b6bff'],[22,24,3,3,'#ffcb1f'],[3,13,3,3,'#ff6fae']],
   // the fans: one on each outer island, pointing the way across to the next one
-  gen(R){FANS.length=0;for(let k=1;k<ISLES.length;k++){const[cx,cy,r]=ISLES[k],a=Math.atan2(1200-cy,1200-cx)+(R()-0.5)*1.2;
+  gen(R){FANS.length=0;NAVF=null;for(let k=1;k<ISLES.length;k++){const[cx,cy,r]=ISLES[k],a=Math.atan2(1200-cy,1200-cx)+(R()-0.5)*1.2;
       const x=(cx+Math.cos(a)*r*0.55)*K,y=(cy+Math.sin(a)*r*0.55)*K;if(pointBlocked(x,y,50)||inBuilding(x,y,60))continue;FANS.push({x,y});const i=Math.floor(x/T),j=Math.floor(y/T);if(TILE[i+j*N]===0)TILE[i+j*N]=1;}},
   // rocky undersides for the islands, rope rails along the bridges, the fans
   build(){for(const[cx,cy,r]of ISLES){S('cone',MAP.side,cx*K,cy*K,-6,r*K*2,r*K*0.9,r*K*2,{rx:Math.PI});S('cone','#6b5d50',cx*K+r*K*0.2,cy*K,-6,r*K*1.1,r*K*1.3,r*K*1.1,{rx:Math.PI});}
@@ -1398,6 +1398,15 @@ function skyCatch(c){const s=freeSpot(c.x,c.y,900,0,null);c.caughtT=G.time; // (
   c.x=s.x;c.y=s.y;c.z=groundAt(s.x,s.y,10)+220;c.vx=c.vy=c.vz=0;c.kx=c.ky=0;c.air=null;c.onGround=false;
   c.state='sky';c.glide=true;c.landX=s.x;c.landY=s.y;c.invuln=Math.max(c.invuln||0,1.5);burst(c.x,c.y,c.z+20,20,'confetti','#43c6ff',160);addText(c.x,c.y,c.z+70,'CAUGHT!','#43c6ff',18);sfx('pickup',c);
   if(c===G.player)toast('🚁 Whoops! The rescue drone caught you and dropped you back on an island.');}
+// F58: is the front of this car (the way it is going) over open sky? Race cars stop there, like at a rail
+function skyEdge(car){const sp=Math.hypot(car.vx,car.vy)||1,r=(car.r||24)*0.5,x=car.x+car.vx/sp*r,y=car.y+car.vy/sp*r;return tileAt(x,y)===6&&!inIsle(x,y,0);}
+// F58: open sky within pad of this spot (race gates and the race bots' shortcuts keep away from the edges)
+function skyNear(x,y,pad){if(!MAP.floaty)return false;const v=(x,y)=>tileAt(x,y)===6&&!inIsle(x,y,0);if(v(x,y))return true;for(let k=0;k<8;k++){const a=k*Math.PI/4;if(v(x+Math.cos(a)*pad,y+Math.sin(a)*pad))return true;}return false;}
+// F58: for the Car Race, the trees and rocks by the bridges and along the track go (they blocked the bridges' ends, and cars snagged on them); the next match builds the island fresh
+function skyClearTrack(segs){let n=0;for(const o of OB.slice()){if(o.built||o.piece||(o.kind!=='tree'&&o.kind!=='rock'))continue;const x=o.t==='cyl'?o.x:o.x+o.w/2,y=o.t==='cyl'?o.y:o.y+o.d/2;
+    for(const[a,b]of segs){const dx=b.x-a.x,dy=b.y-a.y,t=clamp(((x-a.x)*dx+(y-a.y)*dy)/(dx*dx+dy*dy||1),0,1);if(Math.hypot(x-a.x-dx*t,y-a.y-dy*t)<80){wreckOb(o);n++;break;}}}
+  if(n){WRECKED=true;NAVF=null;}return n;} // (F61: and the bots' path grid is made again without them)
+const skyBridgeSegs=()=>ISLE_BRIDGES.map(([a,b])=>[{x:ISLES[a][0]*K,y:ISLES[a][1]*K},{x:ISLES[b][0]*K,y:ISLES[b][1]*K}]);
 // bots walk round by the bridges: a path on the race bots' grid (void is blocked), kept a few seconds
 let NAVF=null;
 function isleSteer(c,gx,gy){const ai=c.ai;if(Math.hypot(gx-c.x,gy-c.y)<200)return null;if(!NAVF||NAVF.id!==MAP_ID){NAVF=navBuild();NAVF.id=MAP_ID;}
@@ -1485,6 +1494,8 @@ function parkArenaBuild(){const[bx,by]=PARK.bump,x0=(bx-200)*K,y0=(by-140)*K,w=4
   for(const y of[y0+5,y0+d/4,y0+3*d/4,y0+d-5])S('cyl','#c5ccd6',x0+w-5,y,0,7,H,7);for(const y of[y0+5,y0+d/4-10,y0+3*d/4+10,y0+d-5])S('cyl','#c5ccd6',x0+5,y,0,7,H,7);
   S('box','#9b6bff',cx,y0+5,H,w+10,8,10);S('box','#9b6bff',cx,y0+d-5,H,w+10,8,10);S('box','#9b6bff',x0+5,cy,H,10,8,d);S('box','#9b6bff',x0+w-5,cy,H,10,8,d);
   const net=new THREE.Mesh(new THREE.PlaneGeometry(w,d,16,10).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0xffcb1f,wireframe:true,transparent:true,opacity:0.55}));net.position.set(cx,H-1,cy);world.add(net);}
+// F60: is this spot in (or within m of) the bumper car arena? (Fort Siege keeps its fort out of it: the fence has one small doorway)
+function parkArenaNear(x,y,m){if(MAP_ID!=='park')return false;const[bx,by]=PARK.bump;return Math.abs(x-bx*K)<200*K+m&&Math.abs(y-by*K)<140*K+m;}
 // bumper cars stay in the arena (the doorway is for people): bounced back off the fence line
 function bumperKeep(car){const[bx,by]=PARK.bump,r=car.r||22,x0=(bx-200)*K+10+r,x1=(bx+200)*K-10-r,y0=(by-140)*K+10+r,y1=(by+140)*K-10-r;
   if(car.x<x0||car.x>x1){car.x=clamp(car.x,x0,x1);car.vx*=-0.5;car.speed*=-0.3;}if(car.y<y0||car.y>y1){car.y=clamp(car.y,y0,y1);car.vy*=-0.5;car.speed*=-0.3;}}
@@ -2407,6 +2418,8 @@ function openFace(c,pref){let best=pref,bestL=-1;
     for(let d=25;d<=220;d+=15){const x=c.x+dx*d,y=c.y+dy*d;if(x<20||y<20||x>WORLD-20||y>WORLD-20||blocked3D(x,y,(c.z||groundAt(c.x,c.y,10))+30))break;L=d;}
     if(L>=220)return a;if(L>bestL){bestL=L;best=a;}}
   return best;}
+// F63: this spot if you can stand there (not lava, water, open sky or inside a wall), else a free one near it
+function safeSpot(x,y,R,minD,others){return pointBlocked(x,y,22)||isBad(x,y)?freeSpot(x,y,R,minD,others):{x,y};}
 function freeSpot(cx,cy,R,minD,others){
   for(let a=0;a<300;a++){const ang=Math.random()*TAU,r=Math.sqrt(Math.random())*R,x=clamp(cx+Math.cos(ang)*r,60,WORLD-60),y=clamp(cy+Math.sin(ang)*r,60,WORLD-60);
     if(pointBlocked(x,y,22)||isBad(x,y)||PADS.some(p=>Math.hypot(p.x-x,p.y-y)<45))continue;let ok=true;if(others)for(const o of others)if(Math.hypot(o.x-x,o.y-y)<minD){ok=false;break;}if(ok)return{x,y};}
@@ -2447,7 +2460,7 @@ function newGame(){
   for(let k=0;k<Math.round(7*K*WM('loot'));k++){const s=freeSpot(WORLD/2,WORLD/2,WORLD*0.5,60,G.items);G.items.push(makeItem('heart',s.x,s.y));}
   for(let k=0;k<Math.round(12*K*WM('loot'));k++){const s=freeSpot(WORLD/2,WORLD/2,WORLD*0.5,60,G.items);G.items.push(makeItem('bricks',s.x,s.y));}spawnGadgetLoot();}
   if(!MODE().noCars)spawnCars();
-  if(mode==='zombie'){for(let k=0;k<4;k++){const a=k*TAU/4;G.items.push(makeItem(['bat','pistol','sword','chicken'][k],p.x+Math.cos(a)*70,p.y+Math.sin(a)*70));}}
+  if(mode==='zombie'){for(let k=0;k<4;k++){const a=k*TAU/4,s=safeSpot(p.x+Math.cos(a)*70,p.y+Math.sin(a)*70,120,30,G.items);G.items.push(makeItem(['bat','pistol','sword','chicken'][k],s.x,s.y));}}
   spawnLootSpecials();
   for(const ch of G.chests){const g=new THREE.Group();g.add(mesh('box','#a0632e',0,0,0,30,16,22));const lid=mesh('box','#ffc21a',0,16,0,32,6,24);g.add(lid);g.position.copy(W3(ch.x,ch.y,groundAt(ch.x,ch.y,4)));scene.add(g);ch.mesh=g;ch.lid=lid;}
   if(!bus)for(const c of G.chars)c.face=openFace(c,c.face||Math.atan2(WORLD/2-c.y,WORLD/2-c.x)); // F8: after the cars, chests and vending machines are placed
@@ -2698,8 +2711,14 @@ function placePiece(ob,p,matName){
   delete ob.ok;ob.built=true;addOb(ob);
   const col=pick(MAT_MESH[matName]);const m=pieceMesh(ob,col,false);
   m.scale.y=0.05;scene.add(m);const piece={ob,parts:[ob],col,mesh:m,hp:MAT_HP[matName],grow:0,cx:ob.x+ob.w/2,cy:ob.y+ob.d/2,owner:p,edit:0};ob.piece=piece;G.pieces.push(piece);sfx('build',p);
-  for(const c of G.chars){if(c.state==='alive'&&ob.t==='box'&&ob.h<10&&inFoot(ob,c.x,c.y,12)&&c.z<ob.z0+ob.h&&c.z+CH>ob.z0){c.z=ob.z0+ob.h;c.onGround=false;}}
+  for(const c of G.chars){if(c.state==='alive'&&ob.t==='box'&&ob.h<10&&inFoot(ob,c.x,c.y,12)&&c.z<ob.z0+ob.h&&c.z+CH>ob.z0){c.z=ob.z0+ob.h;c.onGround=false;}
+    else if(c.state==='alive'&&!c.vehicle&&!(ob.t==='box'&&ob.h<10))pieceFree(ob,c);}
 }
+// F67: a ramp, cone or wall built where someone stands never traps them inside it: up onto its top, or out beside a wall
+// (Floor is Lava bots build a ramp in the square in front of them, even with someone standing in it)
+function pieceFree(ob,c){if(!inFoot(ob,c.x,c.y,ob.kind==='wall'?12:0))return;const top=surfAt(ob,c.x,c.y);if(c.z+CH<=ob.z0||c.z>=top-2)return;
+  if(ob.kind==='wall'){if(ob.w<ob.d)c.x=c.x<ob.x+ob.w/2?ob.x-13:ob.x+ob.w+13;else c.y=c.y<ob.y+ob.d/2?ob.y-13:ob.y+ob.d+13;}
+  else{c.z=top;c.vz=Math.max(0,c.vz||0);c.onGround=true;}}
 // edit one of your walls: solid -> door -> window -> solid
 function editWall(){const p=G.player;if(p.state!=='alive')return;let best=null,bd=130;
   for(const q of G.pieces){if(q.ob.kind!=='wall'||q.dead)continue;const d=Math.hypot(q.cx-p.x,q.cy-p.y);if(d>bd||Math.abs(q.ob.z0-Math.round(p.z/80)*80)>40)continue;
@@ -3245,7 +3264,18 @@ function stuckCheck(c,step){const ai=c.ai;if(ai.wantMove&&Math.hypot(c.x-ai.last
   // F50: going nowhere for 10 s while trying to move (wobbling in a pocket of furniture, or at an edge): hop and head somewhere new
   if(!ai.ax||Math.hypot(c.x-ai.ax,c.y-ai.ay)>80){ai.ax=c.x;ai.ay=c.y;ai.aT=0;}else if(ai.wantMove){ai.aT=(ai.aT||0)+step;
     if(ai.aT>10){ai.aT=0;const s=freeSpot(c.x,c.y,700,0,null),d=Math.hypot(s.x-c.x,s.y-c.y)||1;ai.gx=s.x;ai.gy=s.y;ai.unstuckT=1.4;ai.ux=(s.x-c.x)/d;ai.uy=(s.y-c.y)/d;ai.lost=(ai.lost||0)+1;if(c.onGround){c.vz=Math.max(c.vz,420);c.onGround=false;}}}
+  {const o=c.onGround&&blocked3D(c.x,c.y,c.z+8);if(o&&o!==true){const top=surfAt(o,c.x,c.y); // F65: never left standing inside furniture: up on top of it, or out beside it (F67: or a built ramp: up onto it)
+    if(top-c.z<(o.built?90:45)&&!blocked3D(c.x,c.y,top+20))c.z=top;else{const s=freeSpot(c.x,c.y,150,0,null);c.x=s.x;c.y=s.y;c.z=groundAt(s.x,s.y,10);}}}
   ai.lastX=c.x;ai.lastY=c.y;}
+// F65: a bot inside a building with somewhere to go outside it heads for the nearest doorway first, lines up with it, then walks straight out
+// (before, it walked straight at the wall and wobbled round the furniture until a random unstick got it out)
+function doorWay(c,gx,gy){if(c.z>30)return null;const B=BUILDINGS.find(b=>c.x>b.x&&c.x<b.x+b.w&&c.y>b.y&&c.y<b.y+b.h);
+  if(!B||!B.doors||(gx>B.x&&gx<B.x+B.w&&gy>B.y&&gy<B.y+B.h))return null;
+  const cx=B.x+Math.floor(B.w/80)*40,cy=B.y+Math.floor(B.h/80)*40,D=B.doors,L=[]; // (the doorway's middle: placeBuilding leaves out the two middle bricks)
+  if(D.top)L.push([cx,B.y,0,-1]);if(D.bottom)L.push([cx,B.y+B.h,0,1]);if(D.left)L.push([B.x,cy,-1,0]);if(D.right)L.push([B.x+B.w,cy,1,0]);
+  let best=null,bd=1e9;for(const d of L){const k=Math.hypot(d[0]-c.x,d[1]-c.y)+0.5*Math.hypot(gx-d[0],gy-d[1]);if(k<bd){bd=k;best=d;}}if(!best)return null;
+  const[x0,y0,nx,ny]=best,off=nx?Math.abs(c.y-y0):Math.abs(c.x-x0),deep=-((c.x-x0)*nx+(c.y-y0)*ny); // (how far to one side of the doorway, and how far in from it)
+  const k=deep<45||off<20&&deep<85||off<12?60:-55,tx=x0+nx*k,ty=y0+ny*k,dx=tx-c.x,dy=ty-c.y,d=Math.hypot(dx,dy)||1;return[dx/d,dy/d];} // (in the doorway's clear patch: out; else to just inside it first)
 // loot a bot can't reach (a chest behind a wall, say): no closer for 5 s, so it leaves that spot alone for 30 s
 // up on a roof, loot down on the ground is not reachable from here (the bot wanders, which takes it off the roof)
 const below=(c,o)=>c.z>30&&(o.z||0)<c.z-30;
@@ -3289,7 +3319,7 @@ function botUpdate(c,dt){
   else if(ai.mode==='fight'&&tgt){const w=WEAPONS[c.slots[c.cur].id],dx=wdx(tgt.x-c.x),dy=wdy(c.y,tgt.y),d=Math.hypot(dx,dy)||1,ux=dx/d,uy=dy/d;
     const dd=w.kind==='melee'||w.kind==='trap'?0:desiredRange(c.slots[c.cur].id);if(d>dd+30){mx=ux;my=uy;}else if(dd>0&&d<dd-50){mx=-ux;my=-uy;}
     if(dd>0){const s=Math.sin(G.time*1.4+ai.seed)*0.8;mx+=-uy*s;my+=ux*s;}}
-  else if(ai.gx!=null){const dx=wdx(ai.gx-c.x),dy=wdy(c.y,ai.gy),d=Math.hypot(dx,dy);if(ai.mode==='loot'&&lootProgress(ai,d))mx=my=0;else if(d>18){const s=MAP.floaty&&isleSteer(c,ai.gx,ai.gy);if(s){mx=s[0];my=s[1];}else{mx=dx/d;my=dy/d;}}else if(ai.mode!=='storm')ai.gx=null;}
+  else if(ai.gx!=null){const dx=wdx(ai.gx-c.x),dy=wdy(c.y,ai.gy),d=Math.hypot(dx,dy);if(ai.mode==='loot'&&lootProgress(ai,d))mx=my=0;else if(d>18){const s=doorWay(c,ai.gx,ai.gy)||(MAP.floaty&&isleSteer(c,ai.gx,ai.gy));if(s){mx=s[0];my=s[1];}else{mx=dx/d;my=dy/d;}}else if(ai.mode!=='storm')ai.gx=null;}
   const l=Math.hypot(mx,my);if(l){mx/=l;my/=l;}ai.wantMove=!!(mx||my);[mx,my]=steer(c,mx,my); // (boxed in still counts as wanting to move, so stuckCheck gets it out)
   if(tgt){c.face=Math.atan2(wdy(c.y,tgt.y),wdx(tgt.x-c.x));ai.reactT-=dt;const d=dist(c,tgt),s=c.slots[c.cur],w=WEAPONS[s.id];
     if(ai.reactT<=0&&c.cd<=0&&inRange(w,d)&&Math.abs(tgt.z-c.z)<(w.kind==='melee'?44:400)){fire(c,botAim(c,tgt));ai.aimErr=(Math.random()*2-1)*G.diff.aimErr;ai.aimErr2=(Math.random()*2-1)*G.diff.aimErr;}}
@@ -3330,7 +3360,12 @@ function spawnCars(){G.cars=[];
     if(G.cars.some(c=>Math.hypot(c.x-x,c.y-y)<260)||PADS.some(p=>Math.hypot(p.x-x,p.y-y)<90))continue;
     const col=CAR_COLS[n%CAR_COLS.length];
     G.cars.push(newVehicle(x,y,ang,col,'car'));n++;}
-  spawnMechs();spawnCraft();spawnBoards();if(MAP.cars)MAP.cars();} // (a map's own vehicles: the Theme Park's bumper cars)
+  spawnMechs();spawnCraft();spawnBoards();if(MAP.cars)MAP.cars();spreadVehicles();} // (a map's own vehicles: the Theme Park's bumper cars)
+// F68: no vehicle starts on top of another (a plane on its runway over a car on the road, a hoverboard by a rail under a mech):
+// the other one moves to free ground nearby (planes, boats and bumper cars keep their places: runway, water, arena)
+function spreadVehicles(){const fixed=v=>v.kind==='plane'||v.kind==='boat'||v.kind==='bumper';
+  for(let i=1;i<G.cars.length;i++)for(let j=0;j<i;j++){const a=G.cars[j],b=G.cars[i];if(Math.hypot(a.x-b.x,a.y-b.y)>=(a.r||24)+(b.r||24)+20)continue;
+    const v=fixed(b)&&!fixed(a)?a:b,s=freeSpot(v.x,v.y,300,95,G.cars.filter(o=>o!==v));Object.assign(v,{x:s.x,y:s.y,z:groundAt(s.x,s.y,10),home:{x:s.x,y:s.y,ang:v.ang}});}}
 function carCollide(car){const r=car.r||24,mech=car.kind==='mech',ci=Math.floor(car.x/T),cj=Math.floor(car.y/T);let hit=false;
   for(let dj=-1;dj<=1;dj++)for(let di=-1;di<=1;di++){const i=ci+di,j=cj+dj;if(i<0||j<0||i>=N||j>=N)continue;
     for(const o of GRID[i+j*N].slice()){if(car.z+(car.h||28)<=o.z0)continue;
@@ -3386,6 +3421,7 @@ function updateCars(dt){
     const grip=icy?1.1:wet?4:9,k=car.onGround?Math.min(1,dt*grip):0;car.vx+=(Math.cos(car.ang)*car.speed-car.vx)*k;car.vy+=(Math.sin(car.ang)*car.speed-car.vy)*k;
     if(icy&&me&&Math.abs(angDiff(car.ang,Math.atan2(car.vy,car.vx)))>0.4&&Math.hypot(car.vx,car.vy)>150&&Math.random()<dt*3)addText(car.x,car.y,car.z+50,'DRIFT!','#7fc8ef',13);}
     car.x+=car.vx*dt;car.y+=car.vy*dt;if(car.kind==='plane'&&car.fly)planeWrap(car);
+    if(car.lap!==undefined&&MAP.floaty&&car.onGround&&skyEdge(car)){car.x-=car.vx*dt;car.y-=car.vy*dt;car.speed*=-0.25;car.vx*=0.3;car.vy*=0.3;} // F58: Sky Islands race cars bump the edges like a rail
     if(car.koPilot&&car.koPilot.state==='down'){const c=car.koPilot;c.x=c.koX=car.x;c.y=c.koY=car.y;c.z=car.z;} // the bonked pilot rides along, waiting for the drone
     if(car.kind==='bumper')bumperKeep(car); // (Theme Park: bumper cars stay in their arena)
     if(carCollide(car)){const sp=Math.hypot(car.vx,car.vy);if(sp>170&&car.kind!=='mech'){sfx('bonk',car);if(me)G.shake=Math.max(G.shake,5);damageCar(car,sp*0.02,null);}car.speed*=-0.25;car.vx*=0.3;car.vy*=0.3;}
@@ -3397,6 +3433,7 @@ function updateCars(dt){
     car.padCd=Math.max(0,car.padCd-dt);
     if(car.onGround&&car.padCd<=0&&car.kind!=='heli')for(const pd of PADS)if(Math.hypot(car.x-pd.x,car.y-pd.y)<34){car.vz=MAP.lowG?560:700;car.onGround=false;car.padCd=1.5;sfx('boing',car);addText(car.x,car.y,car.z+50,'WHEEE!','#ff7b1c',17);break;}
     if(hurtAt(car.x,car.y)&&car.z<4&&car.kind!=='board')damageCar(car,30*dt,null);
+    if(MAP.floaty&&car.z<-300&&car.lap!==undefined&&car.driver&&G.mode==='race'){XM.race.reset(car);addText(car.x,car.y,car.z+60,'CAUGHT!','#43c6ff',18);if(car.driver.isPlayer)toast('🚁 Whoops! The rescue drone put your car back on the track.');continue;} // F58: a race car that falls is put back at its last gate, driver and all
     if(MAP.floaty&&car.z<-300){if(car.driver)exitCar(car.driver);car.dead=true;car.m.visible=false;car.respawnAt=G.time+8;continue;} // fell off a Sky Island: it comes back at home
     if(car.dead)continue;
     const sp=Math.hypot(car.vx,car.vy);
@@ -3442,7 +3479,7 @@ function mechModel(col,boss,scale){const g=new THREE.Group(),dark=shadeHex(col,0
   g.userData={legs,shins,arms,torso};scene.add(g);return g;}
 // the parts that make a vehicle a car, a mech or a boss mech (kind: 'car' | 'mech' | 'boss')
 function vehBits(kind,col){const mega=kind==='mega',mech=kind==='mech'||kind==='boss'||mega,boss=kind==='boss'||mega,s=mega?MEGA.scale:boss?BOSS.scale:1,plane=kind==='plane',boat=kind==='boat',board=kind==='board',cat=kind==='catapult',heli=kind==='heli',ft=kind==='firetruck',bump=kind==='bumper',mix=kind==='mixer',hp=mega?MEGA.hp:boss?BOSS.hp:mech?MECH.hp:plane?300:board?250:400;
-  return{kind:mech?'mech':plane||boat||board||cat||heli||ft||bump||mix?kind:'car',boss,mega,r:mech?MECH.r*s:plane?36:boat?32:board?16:cat?26:heli?34:ft?30:bump?22:mix?28:24,h:mech?MECH.h*s:plane?30:boat?24:board?14:cat?40:heli?40:ft?40:bump?22:mix?40:28,seat:mech?MECH.seat*s:cat?16:heli?10:ft?12:bump?6:5,hp,maxHp:hp,m:mech?mechModel(col,boss,s):plane?planeModel(col):boat?boatModel(col):board?boardModel(col):cat?catapultModel(col):heli?heliModel(col):ft?truckModel(col):bump?bumperModel(col):mix?mixerModel(col):carModel(col)};} // (the helicopter and fire truck: Rescue Squad)
+  return{kind:mech?'mech':plane||boat||board||cat||heli||ft||bump||mix?kind:'car',boss,mega,r:mech?MECH.r*s:plane?36:boat?32:board?16:cat?26:heli?34:ft?30:bump?22:mix?28:24,h:mech?MECH.h*s:plane?30:boat?24:board?14:cat?40:heli?40:ft?40:bump?22:mix?40:28,seat:mech?MECH.seat*s:cat?16:heli?6:ft?12:bump?6:mix?12:5,hp,maxHp:hp,m:mech?mechModel(col,boss,s):plane?planeModel(col):boat?boatModel(col):board?boardModel(col):cat?catapultModel(col):heli?heliModel(col):ft?truckModel(col):bump?bumperModel(col):mix?mixerModel(col):carModel(col)};} // (the helicopter and fire truck: Rescue Squad)
 function newVehicle(x,y,ang,col,kind){return{x,y,z:groundAt(x,y,10),vz:0,ang,speed:0,vx:0,vy:0,steer:0,driver:null,col,home:{x,y,ang},dead:false,respawnAt:0,onGround:true,padCd:0,wheelRot:0,walkT:0,cd:0,...vehBits(kind,col)};}
 const MECH_COLS=['#7d8796','#ff7b1c','#1f6fd6','#3aa845'];
 function spawnMechs(){const want=Math.round(2*K*WM('cars'));
@@ -3987,7 +4024,7 @@ function climbBot(c,dt,active,rate){const ai=c.ai;if(!active)return null;
   const cxC=(Math.floor(c.x/T)+0.5)*T,cyC=(Math.floor(c.y/T)+0.5)*T;let mx=dx,my=dy;if(dx)my+=(cyC-c.y)/30;else mx+=(cxC-c.x)/30;const l=Math.hypot(mx,my)||1;
   return[mx/l,my/l,false];}
 // driving route-finding for race bots: a coarse grid of drivable cells, A* between gates, then straightened
-function segClearCar(a,b){const n=Math.ceil(Math.hypot(b.x-a.x,b.y-a.y)/15);for(let k=1;k<n;k++){const x=lerp(a.x,b.x,k/n),y=lerp(a.y,b.y,k/n);if(pointBlocked(x,y,26)||hurtAt(x,y)||inBuilding(x,y,12))return false;}return true;}
+function segClearCar(a,b){const n=Math.ceil(Math.hypot(b.x-a.x,b.y-a.y)/15);for(let k=1;k<n;k++){const x=lerp(a.x,b.x,k/n),y=lerp(a.y,b.y,k/n);if(pointBlocked(x,y,26)||hurtAt(x,y)||inBuilding(x,y,12)||skyNear(x,y,30))return false;}return true;}
 function navBuild(){const S=40,M=Math.ceil(WORLD/S),free=new Uint8Array(M*M);
   for(let j=0;j<M;j++)for(let i=0;i<M;i++){const x=(i+.5)*S,y=(j+.5)*S;free[i+j*M]=(x>50&&y>50&&x<WORLD-50&&y<WORLD-50&&!isBad(x,y)&&!pointBlocked(x,y,26)&&!hurtAt(x,y)&&!inBuilding(x,y,12))?1:0;}
   return{S,M,free};}
@@ -4048,7 +4085,8 @@ XM.training={name:'Training Room',
       c.slots=[{id:'fists'},null,null,null,null];c.cur=0;removeModel(c);buildCharModel(c);});
     // weapon rack: every weapon, behind you, refills itself
     G.rack=[];const ids=Object.keys(WEAPONS).filter(id=>id!=='fists'&&id!=='laser'&&id!=='foambat');const n=ids.length;
-    ids.forEach((id,i)=>{const a=bestA+Math.PI+(i/(n-1)-0.5)*2.4,R=170;const x=p.x+Math.cos(a)*R,y=p.y+Math.sin(a)*R;G.rack.push({id,x,y,item:null,t:0});});
+    ids.forEach((id,i)=>{const a=bestA+Math.PI+(i/(n-1)-0.5)*2.4,R=170;let s=safeSpot(p.x+Math.cos(a)*R,p.y+Math.sin(a)*R,140,36,G.rack); // (F63: none in lava, water or walls, and all close by)
+      for(const m of[30,0])if(Math.hypot(s.x-p.x,s.y-p.y)>320)s=freeSpot(p.x,p.y,300,m,G.rack);G.rack.push({id,x:s.x,y:s.y,item:null,t:0});});
     for(const r of G.rack)this.fill(r);
     announce('Training Room','Practice on the dummies! Grab any weapon from the rack behind you. Building is free. Press P when you are done.',5);},
   fill(r){const it=makeItem(r.id,r.x,r.y,undefined,0,hasRar(r.id)?4:undefined);G.items.push(it);r.item=it;r.t=0;},
@@ -4107,7 +4145,12 @@ XM.koth={name:'King of the Hill',goal(){return Math.round(clamp(G.len/4,30,100))
   cleanup(){if(G.hill)scene.remove(G.hill.m);},
   end(p,b){return endFFA(p,b,'King of the Hill: hold the circle the longest.',e=>Math.floor(e.s)+' pts',me=>[[Math.floor(me.s),'Hill points'],['#'+me.place,'Finish'],[p.kos,'Knockouts']]);}};
 XM.ctf={name:'Capture the Flag',goal:3,
-  init(){G.flags={};for(const tm of['red','blue']){const b=BASES[tm];const s=freeSpot(b.x,b.y,120,0,null);G.flags[tm]={team:tm,hx:s.x,hy:s.y,x:s.x,y:s.y,z:groundAt(s.x,s.y,10),carrier:null,home:true,dropT:0,m:flagModel(tm)};}
+  // F61: each flag stands out in the open (the Sky Islands' bases are among houses, and bots could not find a way to a flag in a doorway)
+  init(){G.flags={};if(MAP.floaty)skyClearTrack(skyBridgeSegs()); // (F61: no trees by the bridges' ends either: they blocked the bots' way home)
+    for(const tm of['red','blue']){const b=BASES[tm];let s=freeSpot(b.x,b.y,120,0,null);
+    for(let k=0;k<60&&inBuilding(s.x,s.y,90);k++)s=freeSpot(b.x,b.y,150+k*6,0,null);G.flags[tm]={team:tm,hx:s.x,hy:s.y,x:s.x,y:s.y,z:groundAt(s.x,s.y,10),carrier:null,home:true,dropT:0,m:flagModel(tm)};}
+    if(MAP.floaty){const F=G.flags,nav=navBuild();for(let k=0;k<30&&!navPath(nav,{x:F.red.hx,y:F.red.hy},{x:F.blue.hx,y:F.blue.hy});k++)for(const tm of['red','blue']){const b=BASES[tm],s=freeSpot(b.x,b.y,150+k*12,0,null); // (F61: and the bots' path grid joins the two)
+      if(!inBuilding(s.x,s.y,90))Object.assign(F[tm],{hx:s.x,hy:s.y,x:s.x,y:s.y,z:groundAt(s.x,s.y,10)});}}
     for(const tm of['red','blue'])G.chars.filter(c=>!c.isPlayer&&c.team===tm).forEach((c,i)=>{c.ai.role=i===0?'defend':'attack';});
     announce('Capture the Flag!','Steal the blue flag and bring it back to your red flag. First to 3 captures wins!',4.2);},
   reset(F){F.home=true;F.x=F.hx;F.y=F.hy;F.z=groundAt(F.hx,F.hy,10);F.carrier=null;},
@@ -4146,21 +4189,23 @@ XM.ctf={name:'Capture the Flag',goal:3,
     return{title:G.draw?"It's a tie!":(G.score.red>G.score.blue?'Red':'Blue')+' team wins!',sub:'Capture the Flag',cls:G.win?'':G.draw?'purple':'blue',
       stats:[[G.score.red+' – '+G.score.blue,'Captures'],[p.kos,'Your KOs'],[p.rescues,'Drone rescues'],[fmt(G.mt),'Match time']]};}};
 // F52: maps with long, twisty race tracks get more time (bots take about 100 s a lap on the Big City)
-const RACE_LONG={city:2,cave:2};
+const RACE_LONG={city:2,cave:2,sky:2,desert:2,ice:2,pirate:2}; // F58: about 80 s a lap round the Sky Islands; F59: the fastest bots take 80-100 s a lap in the desert, on the ice and round Pirate Cove's water
 XM.race={name:'Car Race',laps:3,
   init(){
     // 8 gates around the map, plus a route between them that bots follow around buildings and trees
-    const okPt=(x,y)=>!(x<120||y<120||x>WORLD-120||y>WORLD-120||pointBlocked(x,y,55)||isBad(x,y)||inBuilding(x,y,70));
-    const nav=navBuild(),raw=[];
+    const okPt=(x,y)=>!(x<120||y<120||x>WORLD-120||y>WORLD-120||pointBlocked(x,y,55)||isBad(x,y)||inBuilding(x,y,70)||skyNear(x,y,130)); // (F58: not on the edge of a Sky Island)
+    if(MAP.floaty)skyClearTrack(skyBridgeSegs()); // F58: (every device does the same, from the map)
+    let nav=navBuild();const raw=[];
     for(let k=0;k<8;k++){const a=k*TAU/8+0.2;let best=null;
       for(const r of[800,700,900,600,980,520].map(r=>r*K)){for(const off of[0,0.12,-0.12,0.24,-0.24]){const x=WORLD/2+Math.cos(a+off)*r,y=WORLD/2+Math.sin(a+off)*r;if(okPt(x,y)){best={x,y};break;}}if(best)break;}
       if(best)raw.push(best);}
     const cps=[];for(const c of raw){if(!cps.length||navPath(nav,cps[cps.length-1],c))cps.push(c);}
     const path=[];cps.forEach((c,i)=>{const nx=cps[(i+1)%cps.length];c.wpStart=path.length;const seg=navPath(nav,c,nx)||[{x:nx.x,y:nx.y}];seg[seg.length-1].gate=true;for(const q of seg)path.push(q);});G.racePath=path;
+    if(MAP.floaty&&skyClearTrack(path.map((p,i)=>[p,path[(i+1)%path.length]])))nav=navBuild(); // F58: and none on the Sky Islands' narrow track
     G.nav=nav;G.cps=cps;G.cpM=cps.map((c,i)=>gateModel(c,cps[(i+1)%cps.length]));
     const s=cps[0],n1=cps[1],dir=Math.atan2(n1.y-s.y,n1.x-s.x);G.cars=[];
     G.chars.forEach((c,i)=>{const row=Math.floor(i/3),col=i%3-1;let x=s.x-Math.cos(dir)*(70+row*75)+Math.cos(dir+Math.PI/2)*col*58,y=s.y-Math.sin(dir)*(70+row*75)+Math.sin(dir+Math.PI/2)*col*58;
-      x=clamp(x,60,WORLD-60);y=clamp(y,60,WORLD-60);if(pointBlocked(x,y,26)||isBad(x,y)){const f=freeSpot(x,y,140,50,G.cars);x=f.x;y=f.y;}
+      x=clamp(x,60,WORLD-60);y=clamp(y,60,WORLD-60);if(pointBlocked(x,y,26)||isBad(x,y)||G.cars.some(o=>Math.hypot(o.x-x,o.y-y)<58)){const f=freeSpot(x,y,160,58,G.cars);x=f.x;y=f.y;} // (F68: and not on a car already moved there)
       const colr=c.isPlayer?'#e2312b':CAR_COLS[(i+1)%CAR_COLS.length];
       const car={x,y,z:groundAt(x,y,10),vz:0,ang:dir,speed:0,vx:0,vy:0,steer:0,hp:9999,driver:null,col:colr,home:{x,y,ang:dir},dead:false,respawnAt:0,onGround:true,padCd:0,wheelRot:0,m:carModel(colr),
         next:1,lap:0,lastCp:0,finished:false,stuckT:0,revT:0,maxMul:c.isPlayer?1:({easy:0.8,medium:0.9,hard:0.98}[opts.diff]||0.9)};
@@ -4666,9 +4711,11 @@ const SIEGE={build:45,siege:120,swap:6};
 // ---- the fort: a 3 x 3 block of tiles on open ground, between the defenders' base and the middle of the island
 function siegeSite(team){const b=BASES[team],gx=lerp(b.x,WORLD/2,0.55),gy=lerp(b.y,WORLD/2,0.55),c0=Math.floor(gx/T),r0=Math.floor(gy/T);
   const ok=(ci,cj)=>{for(let j=cj-2;j<=cj+2;j++)for(let i=ci-2;i<=ci+2;i++){if(i<1||j<1||i>=N-1||j>=N-1)return false;const k=TILE[i+j*N],x=(i+0.5)*T,y=(j+0.5)*T;
-      if(!(k===0||k===1||k===5)||pointBlocked(x,y,30)||PADS.some(p=>Math.hypot(p.x-x,p.y-y)<70))return false;}return true;};
+      if(!(k===0||k===1||k===5)||pointBlocked(x,y,30)||PADS.some(p=>Math.hypot(p.x-x,p.y-y)<70)||parkArenaNear(x,y,T))return false;}return true;}; // (F60: not inside the bumper car arena's fence)
   for(let r=0;r<24;r++)for(let dj=-r;dj<=r;dj++)for(let di=-r;di<=r;di++){if(Math.max(Math.abs(di),Math.abs(dj))!==r)continue;if(ok(c0+di,r0+dj))return{ci:c0+di,cj:r0+dj,x:(c0+di+0.5)*T,y:(r0+dj+0.5)*T};}
   return{ci:c0,cj:r0,x:(c0+0.5)*T,y:(r0+0.5)*T};}
+// F60: lava, water or open sky at this spot or anywhere on a ring r round it (the attackers' camp needs safe ground to run home over)
+function siegeBadNear(x,y,r){if(isBad(x,y))return true;for(let k=0;k<8;k++){const a=k*Math.PI/4;if(isBad(x+Math.cos(a)*r,y+Math.sin(a)*r))return true;}return false;}
 // the plan the bots build: stone walls two high and a roof right around the treasure, and a ring of wooden walls around that
 function siegeBlueprint(s){const L=[],wall=(x,y,alongY,lv,m)=>L.push({ob:alongY?{t:'box',x:x-5,y,w:10,d:T,z0:lv*80,h:80}:{t:'box',x,y:y-5,w:T,d:10,z0:lv*80,h:80},m}),ci=s.ci,cj=s.cj;
   for(const lv of[0,1]){wall(ci*T,cj*T,true,lv,'stone');wall((ci+1)*T,cj*T,true,lv,'stone');wall(ci*T,cj*T,false,lv,'stone');wall(ci*T,(cj+1)*T,false,lv,'stone');}
@@ -4713,11 +4760,14 @@ XM.siege={name:'Fort Siege',
     S.site=siegeSite(S.def);S.plan=siegeBlueprint(S.site);S.tr={x:S.site.x,y:S.site.y,z:groundAt(S.site.x,S.site.y,10),home:true,carrier:null,dropT:0};
     // the attackers' camp: open ground about 1250 from the fort, toward the attackers' base
     const ca=Math.atan2(BASES[att].y-S.site.y,BASES[att].x-S.site.x);let a=null;
-    for(const r of[1250,1100,1400,950,1550])for(const o of[0,0.3,-0.3,0.6,-0.6,0.9,-0.9]){if(a)break;const x=S.site.x+Math.cos(ca+o)*r,y=S.site.y+Math.sin(ca+o)*r;
-      if(x>200&&y>200&&x<WORLD-200&&y<WORLD-200&&!pointBlocked(x,y,60)&&!isBad(x,y)&&!inBuilding(x,y,80))a={x,y};}
+    const clear=(x,y)=>{const n=Math.ceil(Math.hypot(x-S.site.x,y-S.site.y)/40);for(let k=1;k<n;k++){const px=lerp(S.site.x,x,k/n),py=lerp(S.site.y,y,k/n);if(inBuilding(px,py,30)||isBad(px,py))return false;}return true;}; // (F60: a straight run home, if there is one: bots carrying the treasure got caught at a building's corner)
+    for(const pass of[1,0])for(const r of[1250,1100,1400,950,1550])for(const o of[0,0.3,-0.3,0.6,-0.6,0.9,-0.9]){if(a)break;const x=S.site.x+Math.cos(ca+o)*r,y=S.site.y+Math.sin(ca+o)*r;
+      if(x>200&&y>200&&x<WORLD-200&&y<WORLD-200&&!pointBlocked(x,y,60)&&!siegeBadNear(x,y,220)&&!inBuilding(x,y,80)&&(!pass||clear(x,y)))a={x,y};} // (F60: not on a road across a lava lake)
+    for(let t=0;t<80&&!a;t++){const s=freeSpot(clamp(S.site.x+Math.cos(ca)*1250,200,WORLD-200),clamp(S.site.y+Math.sin(ca)*1250,200,WORLD-200),200+t*15,0,null);if(!siegeBadNear(s.x,s.y,t<40?220:140)&&!inBuilding(s.x,s.y,80))a=s;} // (F60: on the Sky Islands none of those spots may do: safe ground further round)
     if(!a)a=freeSpot(clamp(S.site.x+Math.cos(ca)*1250,200,WORLD-200),clamp(S.site.y+Math.sin(ca)*1250,200,WORLD-200),200,0,null);S.camp={x:a.x,y:a.y};
     if(S.campM)scene.remove(S.campM);S.campM=siegeCampModel(att);S.campM.position.set(a.x,groundAt(a.x,a.y,10),a.y);
-    G.cars.forEach((v,k)=>{if(v.driver)exitCar(v.driver);const ang=Math.atan2(S.site.y-a.y,S.site.x-a.x),x=a.x+Math.cos(ang+Math.PI/2)*(k?110:-110),y=a.y+Math.sin(ang+Math.PI/2)*(k?110:-110);
+    G.cars.forEach((v,k)=>{if(v.driver)exitCar(v.driver);const ang=Math.atan2(S.site.y-a.y,S.site.x-a.x);let x=a.x+Math.cos(ang+Math.PI/2)*(k?110:-110),y=a.y+Math.sin(ang+Math.PI/2)*(k?110:-110);
+      if(pointBlocked(x,y,40)||isBad(x,y)){const f=freeSpot(x,y,160,90,G.cars.slice(0,k));x=f.x;y=f.y;} // F60: never over open sky or lava
       Object.assign(v,{x,y,z:groundAt(x,y,10),ang,speed:0,vx:0,vy:0,home:{x,y,ang}});});
     const placed=G.cars.slice();for(const c of G.chars){if(c.vehicle)exitCar(c);if(c.state!=='alive')continue;const p=this.spot(c,placed);placed.push(p);const f=openFace({x:p.x,y:p.y},Math.atan2(S.site.y-p.y,S.site.x-p.x));showTp(c,p.x,p.y,p.x+Math.cos(f),p.y+Math.sin(f));c.sgBuild=null;this.loadout(c);}
     MODEFLAGS.siege.freeBuild=1;S.phase='build';S.end=G.time+SIEGE.build;
@@ -4817,7 +4867,7 @@ function heliModel(col){const g=new THREE.Group(),B=(c,x,y,z,w,h,d,geo,em)=>{con
   B(col,0,22,2,34,30,48,'sphC');B(col,0,24,-30,8,8,40);B(col,0,32,-50,3,18,10);B('#ffffff',0,22,-6,35,4,30,'boxC');
   const glass=new THREE.Mesh(GEO.sphC,new THREE.MeshLambertMaterial({color:0xbfe8ff,transparent:true,opacity:0.6}));glass.position.set(0,26,16);glass.scale.set(26,20,22);g.add(glass);
   for(const s of[-1,1]){B('#2b2f3a',s*14,2,2,3,3,52);B('#2b2f3a',s*12,8,12,2,12,2);B('#2b2f3a',s*12,8,-8,2,12,2);}
-  B('#2b2f3a',0,39,2,4,6,4,'cylC');const rotor=new THREE.Group();rotor.position.set(0,42,2);for(const a of[0,Math.PI/2]){const b=new THREE.Mesh(GEO.boxC,mat('#3a3f4b'));b.scale.set(6,1.5,110);b.rotation.y=a;rotor.add(b);}g.add(rotor);
+  B('#2b2f3a',0,47,2,4,22,4,'cylC');const rotor=new THREE.Group();rotor.position.set(0,58,2); // (F62: on a taller mast, well over the pilot's head)for(const a of[0,Math.PI/2]){const b=new THREE.Mesh(GEO.boxC,mat('#3a3f4b'));b.scale.set(6,1.5,110);b.rotation.y=a;rotor.add(b);}g.add(rotor);
   const tail=new THREE.Group();tail.position.set(3,32,-50);const tb=new THREE.Mesh(GEO.boxC,mat('#3a3f4b'));tb.scale.set(1,22,3);tail.add(tb);g.add(tail);
   B('#ff3b3b',0,40,-30,4,3,4,'sphC',0.9);g.userData={rotor,tail,wheels:[]};scene.add(g);return g;}
 // ---- the fire truck: a red truck with a ladder and a water cannon on top
@@ -5165,9 +5215,10 @@ const BALLOON_NET={s:()=>({g:r2(G.goAt-G.time),b:G.cars.map(c=>c.bl||0),o:G.cars
    the end screen. Fireworks are bursts, which the host also sends to joiners. */
 const STREAK_NAMES=['','','DOUBLE BONK!','TRIPLE BONK!','MEGA BONK!','ULTRA BONK!','BONKTACULAR!'];
 function bonkStreak(c){if(!c||c.zombie)return;c.stk=G.time-(c.stkT??-99)<8?(c.stk||1)+1:1;c.stkT=G.time;c.petCheer=G.time;
-  if(c.stk<2)return;const name=STREAK_NAMES[Math.min(c.stk,STREAK_NAMES.length-1)];
+  if(c.stk<2)return;const top=STREAK_NAMES.length-1,name=STREAK_NAMES[Math.min(c.stk,top)];
+  if(c.stk>top&&c.stk%10)return; // F64: past BONKTACULAR, a cheer only every 10 bonks (was a banner, the victory sound and a feed line for every one)
   if(c.isPlayer||c.remote){tellOrAnnounce(c,'💥 '+name,c.stk+' bonks in a row!',2.2);burst(c.x,c.y,c.z+50,c.stk>=3?36:18,'confetti',null,220);sfx(c.stk>=3?'victory':'pickup',c);}
-  if(c.stk>=3)feed(nameTag(c)+(c.isPlayer?' are':' is')+' on a <b>'+name.replace('!','')+'</b> streak!');}
+  if(c.stk>=3)feed(nameTag(c)+(c.isPlayer?' are':' is')+' on a <b>'+name.replace('!','')+'</b> streak!'+(c.stk>top?' ('+c.stk+' in a row)':''));}
 const FW_COLS=['#ff3b3b','#ffcb1f','#5cff7a','#43c6ff','#c79bff','#ff8fc8','#ffffff'];
 function startParty(){G.party={next:0,end:G.endAt};
   for(const c of G.chars)if(c.state==='alive'&&!c.zombie&&!c.vehicle&&c.onGround)c.emote={type:Math.floor(Math.random()*3),t:0,loop:true};}
@@ -5368,10 +5419,16 @@ function collide(c){
   if(G&&G.cars)for(const car of G.cars){if(car.dead||car===c.vehicle)continue;if(c.z>=car.z+(car.h||24)||c.z+CH<=car.z)continue;const dx=wdx(c.x-car.x),dy=wdy(car.y,c.y),d=Math.hypot(dx,dy),R=(car.r||24)+12;if(d<R){const k=d||1;c.x=car.x+dx/k*R;c.y=car.y+dy/k*R;}}
   keepIn(c,r);
 }
+// F69: a gliding bot that can't reach its landing spot any more picks safe ground it can reach, the same way (bots came down in the lava from the battle bus)
+function skyLandCheck(c,gnd){c.landChk=G.time+0.5;const h=c.z-gnd,R=Math.max(40,(c.glide?h/110*400:Math.max(0,h-240)/300*325+240/110*400)*0.8),dx=c.landX-c.x,dy=c.landY-c.y,d=Math.hypot(dx,dy); // (how far it can still get: falling, then gliding)
+  const bad=(x,y)=>{if(isBad(x,y))return true;for(let q=0;q<8;q++){const a=q*Math.PI/4;if(isBad(x+Math.cos(a)*40,y+Math.sin(a)*40))return true;}return false;}; // (not right at the edge of lava or water either)
+  if(d<=R&&!bad(c.landX,c.landY))return;const k=Math.min(d,R*0.6)/(d||1);
+  for(let t=0;t<6;t++){const s=t<3?freeSpot(c.x+dx*k,c.y+dy*k,R*0.4,0,null):freeSpot(c.x,c.y,R,0,null);if(Math.hypot(s.x-c.x,s.y-c.y)<=R+40&&!bad(s.x,s.y)){c.landX=s.x;c.landY=s.y;return;}}}
 function updateSky(c,dt,ix,iy){
   if(isMate(c)&&G.player.state==='sky'){c.landX=G.player.x+(c.offX||0);c.landY=G.player.y+(c.offY||0);}
   if(!c.isPlayer||autoOn(c)){if(c.landX==null){const s=freeSpot(WORLD/2,WORLD/2,WORLD*0.4,0,null);c.landX=s.x;c.landY=s.y;}const dx=c.landX-c.x,dy=c.landY-c.y,d=Math.hypot(dx,dy);if(d>20){ix=dx/d;iy=dy/d;}else ix=iy=0;c.face=Math.atan2(iy||Math.sin(c.face),ix||Math.cos(c.face));}
   const gnd=groundAt(c.x,c.y,c.z);if(!c.glide&&(c.z-gnd<240||MAP.floaty&&c.vz<-60)){c.glide=true;if(c.isPlayer)sfx('glide');} // (over the open sky the glider opens on the way down)
+  if((!c.isPlayer||autoOn(c))&&c.landX!=null&&c.vz<=0&&G.time>(c.landChk||0))skyLandCheck(c,gnd);
   if(MAP.floaty&&c.z<-300){skyCatch(c);return;}
   const sp=c.glide?400:325;c.x+=ix*sp*dt;c.y+=iy*sp*dt;wrapPos(c);if(c.y<14&&!inIsle(c.x,c.y,14))c.y=14; // gliding over an edge comes round the other side
   c.vz=c.glide?lerp(c.vz,-110,Math.min(1,dt*3)):Math.max(c.vz-GRAV()*dt,-380);c.z+=c.vz*dt;c.moving=false;
@@ -5554,7 +5611,8 @@ function syncVisuals(dt){
       else if(c.emote.type===1){g.rotation.y+=e*9;m.armL.rotation.x=m.armR.rotation.x=0;m.armL.rotation.z=-1.45;m.armR.rotation.z=1.45;g.position.y+=Math.abs(Math.sin(e*3))*4;}
       else{const s=(Math.sin(e*7)+1)/2;m.armL.rotation.x=m.armR.rotation.x=0;m.armL.rotation.z=-0.3-2.5*s;m.armR.rotation.z=0.3+2.5*s;m.legL.rotation.x=m.legR.rotation.x=0;m.legL.rotation.z=-0.35*s;m.legR.rotation.z=0.35*s;g.position.y+=s*7;}}
     m.body.position.y=0;if(c.state==='alive'&&!c.vehicle){if(c.slideT>0){g.rotation.x=-0.55;g.position.y+=4;m.legL.rotation.x=m.legR.rotation.x=-1.3;m.armL.rotation.x=-0.6;}else if(c.crouch){m.body.position.y=-7;m.legL.rotation.x=-1.0;m.legR.rotation.x=-0.7;}else if(c.mantleT>0){m.armL.rotation.x=m.armR.rotation.x=-2.8;}}
-    if(c.vehicle&&c.state==='alive'){m.legL.rotation.x=m.legR.rotation.x=-Math.PI/2;m.armL.rotation.x=m.armR.rotation.x=-1.25;m.armL.rotation.z=m.armR.rotation.z=0;g.position.y=c.vehicle.z+(c.vehicle.seat||5);}
+    if(c.vehicle&&c.state==='alive'){m.legL.rotation.x=m.legR.rotation.x=-Math.PI/2;m.armL.rotation.x=m.armR.rotation.x=-1.25;m.armL.rotation.z=m.armR.rotation.z=0;g.position.y=c.vehicle.z+(c.vehicle.seat||5);
+      const f=SEAT_FWD[c.vehicle.kind];if(f){g.position.x+=Math.cos(c.vehicle.ang)*f;g.position.z+=Math.sin(c.vehicle.ang)*f;if(c.vehicle.kind==='heli')g.scale.setScalar(PILOT_SCALE);}} // F62: in the helicopter's bubble and the mixer's cab
     if(c.vehicle&&c.vehicle.kind==='board'&&c.state==='alive'){const v=c.vehicle,R=boardRot(v);m.legL.rotation.x=-0.2;m.legR.rotation.x=0.2;m.legL.rotation.z=-0.12;m.legR.rotation.z=0.12;m.armL.rotation.x=m.armR.rotation.x=-0.25;m.armL.rotation.z=-1.2;m.armR.rotation.z=1.2;
       if(R.sup){m.armL.rotation.x=m.armR.rotation.x=-Math.PI;m.armL.rotation.z=m.armR.rotation.z=0;m.legL.rotation.x=m.legR.rotation.x=0.9;}
       g.position.set(v.x,v.z+BOARD.hover+3+R.lift,v.y);g.rotation.set(R.pitch,Math.PI/2-v.ang+R.spin,0,'YXZ');} // standing on a hoverboard, arms out, turning with its tricks
@@ -5606,7 +5664,8 @@ function syncVisuals(dt){
   {let inB=null;for(const b of BUILDINGS){const inside=p.x>b.x&&p.x<b.x+b.w&&p.y>b.y&&p.y<b.y+b.h;
       if(b.roofMat){const want=inside&&p.z<70&&p.state!=='gone'?0.15:1;b.roofMat.opacity+=(want-b.roofMat.opacity)*Math.min(1,dt*8);b.roofMat.depthWrite=b.roofMat.opacity>0.9;}
       if(b.name&&p.state==='alive'&&p.x>b.x-70&&p.x<b.x+b.w+70&&p.y>b.y-70&&p.y<b.y+b.h+70)inB=b;}
-    if(inB&&G.poi!==inB.name){G.poi=inB.name;showPoi(inB.name);}else if(!inB&&p.state==='alive')G.poi=null;}
+    const aloft=(p.vehicle&&(p.vehicle.fly||p.vehicle.kind==='heli'))||p.z>groundAt(p.x,p.y,p.z)+150; // F71: no place names while you fly over them (the Stunt Course popped one up for every building)
+    if(inB&&!aloft&&G.poi!==inB.name){G.poi=inB.name;showPoi(inB.name);}else if(!inB&&p.state==='alive')G.poi=null;}
   interiorsTick(); // only the rooms near the camera are drawn
   animateWorld(dt,t,p.state==='gone'?(p.watch||{x:p.koX,y:p.koY}):p);
 }
@@ -5631,7 +5690,7 @@ function animateWorld(dt,t,focus){
   pGeo.setDrawRange(0,n);pGeo.attributes.position.needsUpdate=true;pGeo.attributes.color.needsUpdate=true;puGeo.setDrawRange(0,m);puGeo.attributes.position.needsUpdate=true;
 }
 // where the pilot sits in a plane (in the plane's own frame: up, forward): head under the cockpit glass, legs inside
-const PLANE_SEAT=new THREE.Vector3(0,-2,6),PILOT_SCALE=0.8; // (a pilot sits a little smaller and higher, so only the head and shoulders show above the cockpit)
+const PLANE_SEAT=new THREE.Vector3(0,-2,6),PILOT_SCALE=0.8,SEAT_FWD={heli:10,mixer:25}; // (a pilot sits a little smaller and higher, so only the head and shoulders show above the cockpit)
 // flying a plane: the camera rides behind and a little above it, whichever way it turns, rolls or loops (and jumps along when the plane wraps across the map)
 // Flying level, the camera rides right behind the plane. In a loop (or any steep climb or dive) it would end up straight below
 // or above the plane and flip over, so instead it eases into a loop view: it keeps the direction you were flying, pulls back
@@ -5655,6 +5714,12 @@ function planeCam(v,dt){$('scope').hidden=true;
   if(camera.position.distanceTo(want)>1500)camera.position.copy(want);else camera.position.lerp(want,Math.min(1,dt*lerp(6,1.6,s)));camPos.copy(camera.position);
   const fov=lerp(70,80,s);if(Math.abs(camera.fov-fov)>0.05){camera.fov=fov;camera.updateProjectionMatrix();}
   camera.up.set(0,1,0);camera.lookAt(P.addScaledVector(f,70*(1-s)));}
+// F66: the ground under the camera, leaving out built pieces (the camera looks through those)
+function camGround(x,y,z){let g=MAP.floaty&&tileAt(x,y)===6&&!inIsle(x,y,0)?-4000:0;for(const o of cellOf(x,y)){if(o.built||!inFoot(o,x,y,3))continue;const top=surfAt(o,x,y);if(top<=z+STEP&&top>g)g=top;}return g;}
+// F66: built pieces between the camera and you are drawn see-through (and put back when they are not in the way)
+const CAM_SEE=new Set(),camGhost=new THREE.MeshBasicMaterial({color:0xd9c8a8,transparent:true,opacity:0.22,depthWrite:false});
+function camSeeThru(seen){for(const q of CAM_SEE)if(!seen.has(q)||q.dead){q.mesh.traverse(m=>{if(m.userData.mat0){m.material=m.userData.mat0;delete m.userData.mat0;}});CAM_SEE.delete(q);}
+  for(const q of seen)if(!CAM_SEE.has(q)&&!q.dead){q.mesh.traverse(m=>{if(m.isMesh&&!m.userData.mat0){m.userData.mat0=m.material;m.material=camGhost;}});CAM_SEE.add(q);}}
 function updateCamera(dt){
   autoAimOnLand(dt);
   {const v=G.player.vehicle;if(v&&v.kind==='plane'&&v.fly&&v.q&&G.player.state==='alive'){planeCam(v,dt);return;}}
@@ -5671,7 +5736,9 @@ function updateCamera(dt){
   else if(p.state==='gone'||p.state==='carried'||p.state==='down'){fx=p.state==='carried'?p.x:p.koX;fy=p.state==='carried'?p.y:p.koY;fz=(p.state==='carried'?p.z:0)+42;dist0=200;sh=0;}
   const d=lookDir(),rx=-Math.sin(G.yaw),ry=Math.cos(G.yaw);
   const hx=fx+rx*sh,hy=fy+ry*sh,hz=fz+6;let L=dist0;
-  for(let s=16;s<=dist0;s+=8){const x=hx-d.x*s,y=hy-d.y*s,z=hz-d.z*s;{const bo=blocked3D(x,y,z);if((bo&&!bo.roof)||z<groundAt(x,y,z)+6){L=Math.max(18,s-10);break;}}}
+  const seen=new Set(); // F66: built pieces don't pull the camera in; the ones between it and you are see-through instead (Floor is Lava's ramps squeezed it onto your head)
+  for(let s=16;s<=dist0;s+=8){const x=hx-d.x*s,y=hy-d.y*s,z=hz-d.z*s;{const bo=blocked3D(x,y,z);if(bo&&bo.built){if(bo.piece)seen.add(bo.piece);continue;}if((bo&&!bo.roof)||z<camGround(x,y,z)+6){L=Math.max(18,s-10);break;}}}
+  camSeeThru(seen);
   let cx=hx-d.x*L,cy=hy-d.y*L,cz=hz-d.z*L;cz=Math.max(cz,groundAt(cx,cy,cz)+6);
   if(G.shake){cx+=(Math.random()-.5)*G.shake;cz+=(Math.random()-.5)*G.shake;}
   {const zid=(p.slots[p.cur]||p.slots[0]).id,zw=WEAPONS[zid],zoom=aimDown&&p.state==='alive'&&!!zw.zoom,lz=zoom&&zid==='laser',fov=lz?LZ[laserZ][1]:zoom?26:70;const scE=$('scope');if(scE.classList.contains('laser')!==lz)scE.classList.toggle('laser',lz);if(lz){const zt=LZ[laserZ][0]+'x';if($('zoomLbl').textContent!==zt)$('zoomLbl').textContent=zt;}if(Math.abs(camera.fov-fov)>0.1){camera.fov=lerp(camera.fov,fov,Math.min(1,dt*12));camera.updateProjectionMatrix();}const sc=$('scope');if(sc.hidden===zoom)sc.hidden=!zoom;}
@@ -5717,6 +5784,7 @@ function updateHUD(){updateNetHUD();gadgetHud();{const at=$('autoTag'),on=!!(G&&
   else if(p.state==='down'||p.state==='carried'||p.state==='gone'){rs.hidden=false;const n=Math.max(1,Math.ceil(p.respawnAt-G.time));
     setT(rs,HOSP&&p.state==='gone'?`🏥 Bonk Hospital! Getting patched up · back in ${n}…`:HOSP&&p.state==='carried'?`🚁 Off to the Bonk Hospital… back in ${n}…`:`Rescue drone has you! Back in ${n}…`);}
   else rs.hidden=true;
+  if(!rs.hidden){const el=$('elim');if(!el.hidden)el.hidden=true;} // F70: the ELIMINATED popup sits where this message does: it goes (the kill feed still shows it)
   const pr=$('prompt');
   if(G.toastT<=0){let h='';if(p.state==='bus')h='Press <kbd>Space</kbd> to jump out of the bus!';else if(p.state==='sky'&&!p.glide)h='Press <kbd>Space</kbd> to open your glider';
     else if(p.vehicle&&G.mode==='race')h='<kbd>W</kbd> go · <kbd>A</kbd><kbd>D</kbd> steer · <kbd>Shift</kbd> turbo · <kbd>R</kbd> reset car';else if(p.vehicle&&p.vehicle.kind==='mech'){const v=p.vehicle;h=(v.boss?'👑 BOSS MECH ':'🤖 MECH ')+Math.max(0,Math.round(v.hp))+'/'+v.maxHp+' · <kbd>Click</kbd> blast · <kbd>Space</kbd> jump + STOMP · <kbd>Shift</kbd> run'+(v.boss?'':' · <kbd>F</kbd> get out');}
@@ -6572,7 +6640,8 @@ function netClientWorld(d){if(!NETC()||!d||d.id!==G.net.start.id||!G.net.ready)r
 function netClientEv(d){if(!NETC()||!d||d.id!==G.net.start.id)return;const N=G.net;if(!N.ready)return;
   if(N.lastSeq&&d.s>N.lastSeq+1){N.need++;NET.R.presence({need:N.need}).catch(()=>{});}N.lastSeq=Math.max(N.lastSeq,d.s);for(const e of d.e)try{netApplyEv(e);}catch(err){}}
 function netClientPiece(nid,P,col,edit,own){if(G.pieces.some(q=>q.nid===nid))return;const ob={t:P[0]?'ramp':'box',x:P[1],y:P[2],w:P[3],d:P[4],z0:P[5],h:P[6],kind:P[7],dir:P[8],built:true};addOb(ob);
-  const m=pieceMesh(ob,col,false);m.scale.y=0.05;scene.add(m);const q={ob,parts:[ob],col,mesh:m,hp:100,grow:0,cx:ob.x+ob.w/2,cy:ob.y+ob.d/2,edit:0,nid,owner:own!=null&&own>=0?byCid(own):null};ob.piece=q;G.pieces.push(q);if(edit){q.edit=edit;applyWallEdit(q);}}
+  const m=pieceMesh(ob,col,false);m.scale.y=0.05;scene.add(m);const q={ob,parts:[ob],col,mesh:m,hp:100,grow:0,cx:ob.x+ob.w/2,cy:ob.y+ob.d/2,edit:0,nid,owner:own!=null&&own>=0?byCid(own):null};ob.piece=q;G.pieces.push(q);if(edit){q.edit=edit;applyWallEdit(q);}
+  const me=G.player;if(me.state==='alive'&&!me.vehicle&&!(ob.t==='box'&&ob.h<10))pieceFree(ob,me);} // F67: not trapped inside a piece built where you stand
 function netApplyEv(e){const k=e[0];
   if(k==='b')burst(e[1],e[2],e[3],e[4],e[5],e[6]||null,e[7]);else if(k==='x')addText(e[1],e[2],e[3],e[4],e[5],e[6]);else if(k==='m')addBeam(e[1],e[2],e[3],e[4],e[5],e[6],e[7],e[8],e[9],e[10]);
   else if(k==='s')sfx(e[1],{x:e[2],y:e[3]});
