@@ -703,7 +703,7 @@ body.tediting .tb.ghost{opacity:.3}body.tediting #lobbyBar{display:none!importan
 // Release track of this copy: "stable" (main), "beta" or "alpha" (newest features). Set when a copy is published.
 const BONK_TRACK="beta";
 // Version: 0.1 is the first numbered release; every push to GitHub after that adds 0.1. "-dev" = not released yet.
-const BONK_VERSION="0.5.5";
+const BONK_VERSION="0.5.6";
 // Relay (TURN) for the website's direct links, from the owner's Metered.ca account (free plan, no card on file).
 // Only used when two devices cannot link directly (cellular data, strict school/office networks). These details are
 // public inside the website; the worst case of misuse is running out of the free monthly allowance, never a bill.
@@ -4867,7 +4867,8 @@ function heliModel(col){const g=new THREE.Group(),B=(c,x,y,z,w,h,d,geo,em)=>{con
   B(col,0,22,2,34,30,48,'sphC');B(col,0,24,-30,8,8,40);B(col,0,32,-50,3,18,10);B('#ffffff',0,22,-6,35,4,30,'boxC');
   const glass=new THREE.Mesh(GEO.sphC,new THREE.MeshLambertMaterial({color:0xbfe8ff,transparent:true,opacity:0.6}));glass.position.set(0,26,16);glass.scale.set(26,20,22);g.add(glass);
   for(const s of[-1,1]){B('#2b2f3a',s*14,2,2,3,3,52);B('#2b2f3a',s*12,8,12,2,12,2);B('#2b2f3a',s*12,8,-8,2,12,2);}
-  B('#2b2f3a',0,47,2,4,22,4,'cylC');const rotor=new THREE.Group();rotor.position.set(0,58,2); // (F62: on a taller mast, well over the pilot's head)for(const a of[0,Math.PI/2]){const b=new THREE.Mesh(GEO.boxC,mat('#3a3f4b'));b.scale.set(6,1.5,110);b.rotation.y=a;rotor.add(b);}g.add(rotor);
+  // (F62: the rotor is on a taller mast, well over the pilot's head; F72: its blades are built and fixed to the helicopter again)
+  B('#2b2f3a',0,47,2,4,22,4,'cylC');const rotor=new THREE.Group();rotor.position.set(0,58,2);for(const a of[0,Math.PI/2]){const b=new THREE.Mesh(GEO.boxC,mat('#3a3f4b'));b.scale.set(6,1.5,110);b.rotation.y=a;rotor.add(b);}g.add(rotor);
   const tail=new THREE.Group();tail.position.set(3,32,-50);const tb=new THREE.Mesh(GEO.boxC,mat('#3a3f4b'));tb.scale.set(1,22,3);tail.add(tb);g.add(tail);
   B('#ff3b3b',0,40,-30,4,3,4,'sphC',0.9);g.userData={rotor,tail,wheels:[]};scene.add(g);return g;}
 // ---- the fire truck: a red truck with a ladder and a water cannon on top
